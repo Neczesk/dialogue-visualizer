@@ -246,8 +246,9 @@ export const DialogueNodeEditor: React.FC<DialogueNodeEditorProps> = ({
                   <div className='choice-meta'>
                     {choice.prerequisites && <span className='condition-badge'>⚡</span>}
                     {choice.flagChanges && <span className='flag-badge'>🚩</span>}
-                    {choice.stateChanges!.length > 0 && <span className='state-badge'>📊</span>}→{' '}
-                    {choice.nextNodeId || '???'}
+                    {choice.stateChanges && choice.stateChanges.length > 0 && (
+                      <span className='state-badge'>📊</span>
+                    )}→ {choice.nextNodeId || '???'}
                   </div>
                 </div>
               ))}

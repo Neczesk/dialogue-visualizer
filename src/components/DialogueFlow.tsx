@@ -262,7 +262,7 @@ export const DialogueFlow: React.FC<DialogueFlowProps> = ({ dialogueTree, onCrea
 
         // Common edge styles
         const baseEdgeStyle = {
-          type: 'smoothstep' as const,
+          type: 'bezier' as const,
           sourceHandle: Position.Right,
           targetHandle: Position.Left,
           labelStyle: {
@@ -351,7 +351,6 @@ export const DialogueFlow: React.FC<DialogueFlowProps> = ({ dialogueTree, onCrea
 
   const handleNodeSave = useCallback(
     (updatedNode: DialogueNode) => {
-      console.log('DialogueFlow handleNodeSave:', updatedNode);
       if (!dialogueTree) return;
 
       // Update the tree with the new node
@@ -363,7 +362,6 @@ export const DialogueFlow: React.FC<DialogueFlowProps> = ({ dialogueTree, onCrea
         },
       };
 
-      console.log('DialogueFlow updating tree with:', newTree);
       onUpdate(newTree);
       setEditingNodeId(null);
     },

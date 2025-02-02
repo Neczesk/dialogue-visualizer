@@ -14,7 +14,7 @@
     "intro": {
       "id": "intro",
       "speaker": "Guide",
-      "text": "Welcome to the [color=blue]Dialogue Editor[/color]! I'll show you how everything works.",
+      "text": "Welcome to the [color=royalblue]Dialogue Editor[/color]! I'll show you how everything works.",
       "emotion": "excited",
       "choices": [
         {
@@ -37,7 +37,7 @@
     "formatting": {
       "id": "formatting",
       "speaker": "Guide",
-      "text": "You can make text **bold**, _italic_, or ~~strikethrough~~. You can also add [color=red]colors[/color] to your text!",
+      "text": "You can make text [b]bold[/b], [i]italic[/i], or [s]strikethrough[/s]. You can also add [color=red]colors[/color] to your text!",
       "emotion": "happy",
       "choices": [
         {
