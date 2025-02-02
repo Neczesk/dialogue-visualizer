@@ -31,6 +31,26 @@
           "id": "choice_3",
           "text": "Show me conditions and flags",
           "nextNodeId": "conditions"
+        },
+        {
+          "id": "choice_export",
+          "text": "How do I export my dialogue?",
+          "nextNodeId": "export_info"
+        },
+        {
+          "id": "choice_portraits",
+          "text": "How do character portraits work?",
+          "nextNodeId": "portraits_info"
+        },
+        {
+          "id": "choice_alternates",
+          "text": "What are alternate texts?",
+          "nextNodeId": "alternate_info"
+        },
+        {
+          "id": "choice_editor",
+          "text": "How do I use the node editor?",
+          "nextNodeId": "editor_info"
         }
       ]
     },
@@ -136,6 +156,391 @@
         {
           "id": "choice_10",
           "text": "Go back to start",
+          "nextNodeId": "intro"
+        },
+        {
+          "id": "choice_locks",
+          "text": "Tell me about locked paths",
+          "nextNodeId": "locks_info"
+        },
+        {
+          "id": "choice_state_changes",
+          "text": "Can choices change flags and values?",
+          "nextNodeId": "state_changes"
+        }
+      ]
+    },
+    "export_info": {
+      "id": "export_info",
+      "speaker": "Guide",
+      "text": "You can export your dialogue as a Godot resource (.tres) file! Click the 'Export Resource' button in the toolbar.",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "choice_export_2",
+          "text": "What about the character pictures?",
+          "nextNodeId": "export_pictures"
+        },
+        {
+          "id": "choice_export_script",
+          "text": "Tell me about the script",
+          "nextNodeId": "export_script"
+        }
+      ]
+    },
+    "export_script": {
+      "id": "export_script",
+      "speaker": "Guide",
+      "text": "When you export, you'll get both a .tres resource and a .gd script. The script handles all the dialogue logic in Godot.",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "choice_export_future",
+          "text": "Will there be an easier way?",
+          "nextNodeId": "export_future"
+        }
+      ]
+    },
+    "export_future": {
+      "id": "export_future",
+      "speaker": "Guide",
+      "text": "Yes! Once the system is stable, there will be a ready-to-use dialogue scene in the Godot Asset Library. For now, you'll need to set up the scene yourself.",
+      "emotion": "excited",
+      "choices": [
+        {
+          "id": "choice_export_done",
+          "text": "I understand exporting",
+          "nextNodeId": "intro"
+        }
+      ]
+    },
+    "export_pictures": {
+      "id": "export_pictures",
+      "speaker": "Guide",
+      "text": "You'll need to update the picture paths in your project to match your Godot project structure. Make sure to put your character pictures in your project's assets!",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "choice_export_3",
+          "text": "Got it, thanks!",
+          "nextNodeId": "intro"
+        }
+      ]
+    },
+    "portraits_info": {
+      "id": "portraits_info",
+      "speaker": "Guide",
+      "text": "Right now I don't have a portrait, but you can add one! Click 'Edit Picture' in the toolbar and paste an image URL.",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "choice_portraits_2",
+          "text": "What about different emotions?",
+          "nextNodeId": "portraits_emotions"
+        }
+      ]
+    },
+    "portraits_emotions": {
+      "id": "portraits_emotions",
+      "speaker": "Guide",
+      "text": "Each character can have different portraits for different emotions. Add them in the character's emotions section when you export to Godot.",
+      "emotion": "excited",
+      "choices": [
+        {
+          "id": "choice_portraits_3",
+          "text": "I understand now",
+          "nextNodeId": "intro"
+        }
+      ]
+    },
+    "alternate_info": {
+      "id": "alternate_info",
+      "speaker": "Guide",
+      "text": "Alternate texts let you show different dialogue based on conditions! Try setting the flag 'saw_alternate' to see this text change.",
+      "emotion": "excited",
+      "alternateTexts": [
+        {
+          "text": "See? This text is different because you set the flag! You can also change my emotion with alternates.",
+          "emotion": "happy",
+          "prerequisites": {
+            "requiredFlags": ["saw_alternate"]
+          }
+        }
+      ],
+      "choices": [
+        {
+          "id": "choice_alt_2",
+          "text": "Show me more examples",
+          "nextNodeId": "alternate_examples"
+        },
+        {
+          "id": "choice_alt_paths",
+          "text": "What about alternate paths?",
+          "nextNodeId": "alternate_paths"
+        }
+      ]
+    },
+    "alternate_examples": {
+      "id": "alternate_examples",
+      "speaker": "Guide",
+      "text": "You have {$$gold} gold. That's not much...",
+      "emotion": "thoughtful",
+      "alternateTexts": [
+        {
+          "text": "Wow, {$$gold} gold! You're rich!",
+          "emotion": "excited",
+          "prerequisites": {
+            "stateConditions": [
+              {
+                "key": "gold",
+                "operator": ">=",
+                "value": 200
+              }
+            ]
+          }
+        }
+      ],
+      "choices": [
+        {
+          "id": "choice_alt_3",
+          "text": "I understand alternates now",
+          "nextNodeId": "intro"
+        }
+      ]
+    },
+    "alternate_paths": {
+      "id": "alternate_paths",
+      "speaker": "Guide",
+      "text": "Choices can have alternate destinations based on conditions! This choice has two possible paths.",
+      "emotion": "excited",
+      "choices": [
+        {
+          "id": "choice_paths_demo",
+          "text": "Where will this take me?",
+          "nextNodeId": "paths_poor",
+          "alternateDestinations": [
+            {
+              "nextNodeId": "paths_rich",
+              "prerequisites": {
+                "stateConditions": [
+                  {
+                    "key": "gold",
+                    "operator": ">=",
+                    "value": 150
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "paths_poor": {
+      "id": "paths_poor",
+      "speaker": "Guide",
+      "text": "With only {$$gold} gold, you took the normal path. Try getting more gold and clicking that choice again!",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "choice_paths_back",
+          "text": "Go back and try again",
+          "nextNodeId": "alternate_paths"
+        }
+      ]
+    },
+    "paths_rich": {
+      "id": "paths_rich",
+      "speaker": "Guide",
+      "text": "With {$$gold} gold, you took the alternate path! Alternate paths are shown with animated lines in the graph.",
+      "emotion": "excited",
+      "choices": [
+        {
+          "id": "choice_paths_done",
+          "text": "I understand paths now",
+          "nextNodeId": "intro"
+        }
+      ]
+    },
+    "locks_info": {
+      "id": "locks_info",
+      "speaker": "Guide",
+      "text": "Paths can be locked by conditions, shown with a 🔒 icon. Or they can be blockable, shown with a ⚠️ icon.",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "choice_locked",
+          "text": "This path is locked (needs 300 gold)",
+          "nextNodeId": "locks_rich",
+          "prerequisites": {
+            "stateConditions": [
+              {
+                "key": "gold",
+                "operator": ">=",
+                "value": 300
+              }
+            ]
+          }
+        },
+        {
+          "id": "choice_blockable",
+          "text": "This path can be blocked",
+          "nextNodeId": "locks_blocked",
+          "prerequisites": {
+            "blockedFlags": ["is_blocked"]
+          }
+        },
+        {
+          "id": "choice_block_toggle",
+          "text": "Toggle blocked state",
+          "nextNodeId": "locks_info",
+          "flagChanges": {
+            "add": ["is_blocked"]
+          },
+          "alternateDestinations": [
+            {
+              "nextNodeId": "locks_info",
+              "prerequisites": {
+                "requiredFlags": ["is_blocked"]
+              },
+              "flagChanges": {
+                "remove": ["is_blocked"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "locks_rich": {
+      "id": "locks_rich",
+      "speaker": "Guide",
+      "text": "You unlocked this path with {$$gold} gold! Locked paths show as dashed lines in the graph.",
+      "emotion": "excited",
+      "choices": [
+        {
+          "id": "choice_locks_back",
+          "text": "Go back",
+          "nextNodeId": "locks_info"
+        }
+      ]
+    },
+    "locks_blocked": {
+      "id": "locks_blocked",
+      "speaker": "Guide",
+      "text": "This path can be blocked by setting the 'is_blocked' flag. Try toggling it!",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "choice_blocked_back",
+          "text": "Go back",
+          "nextNodeId": "locks_info"
+        }
+      ]
+    },
+    "state_changes": {
+      "id": "state_changes",
+      "speaker": "Guide",
+      "text": "Yes! Choices can add or remove flags, and modify state values. This choice will give you 50 gold and add a flag.",
+      "emotion": "excited",
+      "choices": [
+        {
+          "id": "choice_add_gold",
+          "text": "Give me gold and add flag",
+          "nextNodeId": "state_changes_result",
+          "stateChanges": [
+            {
+              "key": "gold",
+              "value": 50
+            }
+          ],
+          "flagChanges": {
+            "add": ["got_gold"]
+          }
+        }
+      ]
+    },
+    "state_changes_result": {
+      "id": "state_changes_result",
+      "speaker": "Guide",
+      "text": "You now have {$$gold} gold.",
+      "emotion": "thoughtful",
+      "alternateTexts": [
+        {
+          "text": "You got the gold and the flag! Notice how some choices might have unlocked now.",
+          "emotion": "excited",
+          "prerequisites": {
+            "requiredFlags": ["got_gold"]
+          }
+        }
+      ],
+      "choices": [
+        {
+          "id": "choice_remove_flag",
+          "text": "Remove the flag",
+          "nextNodeId": "state_changes_result",
+          "flagChanges": {
+            "remove": ["got_gold"]
+          }
+        },
+        {
+          "id": "choice_changes_done",
+          "text": "I understand state changes",
+          "nextNodeId": "intro"
+        }
+      ]
+    },
+    "editor_info": {
+      "id": "editor_info",
+      "speaker": "Guide",
+      "text": "Double-click any node to open the editor. You can edit the text, speaker, and emotion there. The inspector panel on the right shows more options based on what you select.",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "choice_editor_states",
+          "text": "How do I add states and flags?",
+          "nextNodeId": "editor_states"
+        },
+        {
+          "id": "choice_editor_alts",
+          "text": "Tell me about alternate texts and paths",
+          "nextNodeId": "editor_alternates"
+        }
+      ]
+    },
+    "editor_states": {
+      "id": "editor_states",
+      "speaker": "Guide",
+      "text": "When you add state values or flags in any node's conditions, they automatically appear in the preview panel. Try it with the {$$gold} value!",
+      "emotion": "excited",
+      "choices": [
+        {
+          "id": "choice_editor_back",
+          "text": "What else can I edit?",
+          "nextNodeId": "editor_info"
+        }
+      ]
+    },
+    "editor_alternates": {
+      "id": "editor_alternates",
+      "speaker": "Guide",
+      "text": "Click 'Add Alternate Text' to add variations of the dialogue. For choices, select a choice and use the inspector to add alternate paths or conditions.",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "choice_editor_nodes",
+          "text": "How do I create new nodes?",
+          "nextNodeId": "editor_nodes"
+        }
+      ]
+    },
+    "editor_nodes": {
+      "id": "editor_nodes",
+      "speaker": "Guide",
+      "text": "Type a new ID in any choice's 'Next Node' field and click 'Create Node'. You can also add choices to the current node with the 'Add Choice' button.",
+      "emotion": "excited",
+      "choices": [
+        {
+          "id": "choice_editor_done",
+          "text": "I understand the editor now",
           "nextNodeId": "intro"
         }
       ]
