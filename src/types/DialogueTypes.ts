@@ -11,12 +11,21 @@ export interface EmotionPortraits {
   default: string; // default portrait URL
 }
 
+export interface Character {
+  name: string;
+  defaultEmotion: string;
+  portraits: {
+    [emotion: string]: string;
+  };
+}
+
 export interface DialogueNode {
   id: string;
+  character: string; // References character ID
+  speaker: string; // Display name (can be different from character name)
   text: string;
-  alternateTexts?: AlternateText[];
-  speaker: string;
   emotion?: string;
+  alternateTexts?: AlternateText[];
   choices: DialogueChoice[];
 }
 
@@ -24,45 +33,47 @@ export interface DialogueChoice {
   id: string;
   text: string;
   nextNodeId: string;
-  alternateDestinations?: Array<{
-    nextNodeId: string;
-    prerequisites: {
-      requiredFlags?: string[];
-      blockedFlags?: string[];
-      stateConditions?: StateCondition[];
-    };
-  }>;
-  prerequisites?: {
-    requiredFlags?: string[];
-    blockedFlags?: string[];
-    stateConditions?: StateCondition[];
-  };
-  flagChanges?: {
-    add?: string[];
-    remove?: string[];
-  };
-  stateChanges?: {
-    key: string;
-    value: number;
-  }[];
+  prerequisites?: Prerequisites;
+  alternateDestinations?: AlternateDestination[];
+  flagChanges?: FlagChanges;
+  stateChanges?: StateChange[];
 }
 
 export interface DialogueTree {
   name: string;
-  character: string;
-  characterName: string;
-  characterPicture: string;
+  characters: {
+    [characterId: string]: Character;
+  };
   startNodeId: string;
-  nodes: { [key: string]: DialogueNode };
-  emotions: EmotionPortraits;
+  nodes: {
+    [nodeId: string]: DialogueNode;
+  };
 }
 
 interface AlternateText {
   text: string;
   emotion?: string;
-  prerequisites: {
-    requiredFlags?: string[];
-    blockedFlags?: string[];
-    stateConditions?: StateCondition[];
-  };
+  prerequisites?: Prerequisites;
+}
+
+export interface Prerequisites {
+  requiredFlags?: string[];
+  blockedFlags?: string[];
+  stateConditions?: StateCondition[];
+}
+
+export interface AlternateDestination {
+  nextNodeId: string;
+  prerequisites: Prerequisites;
+}
+
+export interface FlagChanges {
+  add?: string[];
+  remove?: string[];
+}
+
+export interface StateChange {
+  key: string;
+  value: number;
+  operation?: 'add' | 'subtract' | 'set'; // defaults to 'set' if not specified
 }

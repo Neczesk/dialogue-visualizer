@@ -1,45 +1,122 @@
+@tool
 extends Resource
+class_name DialogueTree
 
 @export var name: String
-@export var character: String
-@export var character_name: String
-@export_file("*.png", "*.jpg", "*.webp") var character_picture: String
+@export var characters: Dictionary = {}
 @export var start_node_id: String
+@export var nodes: Dictionary = {}
 
-# Custom emotion dictionary type for better editor support
-class EmotionPortrait:
-    extends Resource
-    @export_file("*.png", "*.jpg", "*.webp") var portrait_path: String
-
-# Use a typed array for emotions to get file picker in editor
-@export var emotion_portraits: Array[EmotionPortrait]
 # Runtime dictionary built from emotion_portraits
 var emotions: Dictionary
 
 func _init():
-    # Convert emotion_portraits array to dictionary on load
-    emotions = {}
-    for portrait in emotion_portraits:
-        if portrait and portrait.portrait_path:
-            emotions[portrait.name] = portrait.portrait_path
+    pass
 
-@export var nodes: Dictionary
+# Helper function to get a character's portrait
+func get_character_portrait(character_id: String, emotion: String = "") -> String:
+    if not characters.has(character_id):
+        return ""
+    
+    var character = characters[character_id]
+    if emotion and character.portraits.has(emotion):
+        return character.portraits[emotion]
+    return character.portraits[character.default_emotion]
+
+# Get the text and emotion for a node, considering alternate texts
+func get_node_text_and_emotion(node_id: String, game_flags: Array = [], game_state: Dictionary = {}) -> Dictionary:
+    if not nodes.has(node_id):
+        return {"text": "", "emotion": ""}
+    
+    var node = nodes[node_id]
+    
+    # Check alternate texts
+    if node.has("alternate_texts"):
+        for alt in node.alternate_texts:
+            if check_prerequisites(alt.get("prerequisites", {}), game_flags, game_state):
+                return {
+                    "text": alt.text,
+                    "emotion": alt.get("emotion", node.get("emotion", "default"))
+                }
+    
+    return {
+        "text": node.text,
+        "emotion": node.get("emotion", "default")
+    }
+
+# Check if a choice is available based on prerequisites
+func is_choice_available(choice: Dictionary, game_flags: Array = [], game_state: Dictionary = {}) -> bool:
+    if not choice.has("prerequisites"):
+        return true
+    return check_prerequisites(choice.prerequisites, game_flags, game_state)
+
+# Get the next node ID for a choice, considering alternate destinations
+func get_next_node_id(choice: Dictionary, game_flags: Array = [], game_state: Dictionary = {}) -> String:
+    if choice.has("alternate_destinations"):
+        for dest in choice.alternate_destinations:
+            if check_prerequisites(dest.prerequisites, game_flags, game_state):
+                return dest.next_node_id
+    return choice.next_node_id
+
+# Helper to check prerequisites
+func check_prerequisites(prereqs: Dictionary, game_flags: Array, game_state: Dictionary) -> bool:
+    if prereqs.has("requiredFlags"):
+        for flag in prereqs.requiredFlags:
+            if not flag in game_flags:
+                return false
+    
+    if prereqs.has("blockedFlags"):
+        for flag in prereqs.blockedFlags:
+            if flag in game_flags:
+                return false
+    
+    if prereqs.has("stateConditions"):
+        for condition in prereqs.stateConditions:
+            var value = game_state.get(condition.key, 0)
+            match condition.operator:
+                "=": if value != condition.value: return false
+                ">": if value <= condition.value: return false
+                "<": if value >= condition.value: return false
+                ">=": if value < condition.value: return false
+                "<=": if value > condition.value: return false
+    
+    return true
+
+# Apply state changes from a choice
+func apply_choice_changes(choice: Dictionary, game_flags: Array, game_state: Dictionary) -> Dictionary:
+    var result = {
+        "flags": game_flags.duplicate(),
+        "state": game_state.duplicate()
+    }
+    
+    if choice.has("flagChanges"):
+        if choice.flagChanges.has("add"):
+            for flag in choice.flagChanges.add:
+                if not flag in result.flags:
+                    result.flags.append(flag)
+        if choice.flagChanges.has("remove"):
+            for flag in choice.flagChanges.remove:
+                result.flags.erase(flag)
+    
+    if choice.has("stateChanges"):
+        for change in choice.stateChanges:
+            var current = result.state.get(change.key, 0)
+            match change.get("operation", "set"):
+                "add": result.state[change.key] = current + change.value
+                "subtract": result.state[change.key] = current - change.value
+                _: result.state[change.key] = change.value
+    
+    return result
 
 func get_node(id: String) -> Dictionary:
     return nodes.get(id, {})
 
 func get_emotion_portrait(emotion: String) -> String:
-    return emotions.get(emotion, emotions.get("default", character_picture))
+    return emotions.get(emotion, emotions.get("default", ""))
 
 func get_choices(node_id: String) -> Array:
     var node = get_node(node_id)
     return node.get("choices", [])
-
-func get_next_node_id(node_id: String, choice_index: int) -> String:
-    var choices = get_choices(node_id)
-    if choice_index >= 0 and choice_index < choices.size():
-        return choices[choice_index].get("nextNodeId", "")
-    return ""
 
 func get_text(node_id: String) -> String:
     var node = get_node(node_id)
@@ -47,7 +124,7 @@ func get_text(node_id: String) -> String:
 
 func get_speaker(node_id: String) -> String:
     var node = get_node(node_id)
-    return node.get("speaker", character_name)
+    return node.get("speaker", "")
 
 func get_emotion(node_id: String) -> String:
     var node = get_node(node_id)

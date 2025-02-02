@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { DialogueNode, DialogueTree } from '../types/DialogueTypes';
+import { getDialogueFiles, DialogueFile } from '../utils/dialogueLoader';
 
 import { DialogueFlow } from './DialogueFlow';
 import { DialoguePreview } from './DialoguePreview';
 import { DialogueNodeEditor } from './DialogueNodeEditor';
 import { downloadAsGodotResource, downloadDialogueTreeScript } from '../utils/godotExporter';
-import { dialogueFiles, defaultTemplate } from '../data/dialogueTemplates';
+import { CharacterManager } from './CharacterManager';
 
 const STORAGE_KEY = 'dialogue_tree_data';
 
@@ -16,9 +17,11 @@ export const DialogueEditor: React.FC = () => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isEditingPicture, setIsEditingPicture] = useState(false);
   const [pictureUrl, setPictureUrl] = useState('');
-  const [selectedTemplatePath, setSelectedTemplatePath] = useState<string>('tutorial');
+  const [templates] = useState<DialogueFile[]>(getDialogueFiles());
+  const [selectedTemplatePath, setSelectedTemplatePath] = useState<string>(templates[0]?.path || '');
+  const [isCharacterManagerOpen, setIsCharacterManagerOpen] = useState(false);
 
-  // Load saved data or default template on mount
+  // Load saved data on mount
   useEffect(() => {
     const savedData = localStorage.getItem(STORAGE_KEY);
     if (savedData) {
@@ -26,10 +29,10 @@ export const DialogueEditor: React.FC = () => {
         setDialogueTree(JSON.parse(savedData));
       } catch (e) {
         console.error('Error loading saved data:', e);
-        setDialogueTree(defaultTemplate as DialogueTree);
+        loadSelectedTemplate(); // Only load template if save fails
       }
     } else {
-      setDialogueTree(defaultTemplate as DialogueTree);
+      loadSelectedTemplate(); // Only load template if no save exists
     }
   }, []);
 
@@ -107,11 +110,20 @@ export const DialogueEditor: React.FC = () => {
     if (isEditingPicture && dialogueTree) {
       setDialogueTree({
         ...dialogueTree,
-        characterPicture: pictureUrl,
+        characters: {
+          ...dialogueTree.characters,
+          default: {
+            ...dialogueTree.characters.default,
+            portraits: {
+              ...dialogueTree.characters.default.portraits,
+              default: pictureUrl,
+            },
+          },
+        },
       });
       setIsEditingPicture(false);
     } else {
-      setPictureUrl(dialogueTree?.characterPicture || '');
+      setPictureUrl(dialogueTree?.characters.default.portraits.default || '');
       setIsEditingPicture(true);
     }
   };
@@ -152,8 +164,9 @@ export const DialogueEditor: React.FC = () => {
 
     const newNode: DialogueNode = {
       id,
+      character: Object.keys(dialogueTree.characters)[0],
+      speaker: dialogueTree.characters[Object.keys(dialogueTree.characters)[0]].name,
       text: 'New dialogue node',
-      speaker: dialogueTree.characterName,
       choices: [
         {
           id: `choice_${Date.now()}`,
@@ -175,13 +188,9 @@ export const DialogueEditor: React.FC = () => {
     });
   };
 
-  const handleTemplateSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedTemplatePath(event.target.value);
-  };
-
   const loadSelectedTemplate = () => {
     if (window.confirm('Loading a template will discard any unsaved changes. Continue?')) {
-      const selectedFile = dialogueFiles.find((file) => file.path === selectedTemplatePath);
+      const selectedFile = templates.find((file) => file.path === selectedTemplatePath);
       if (selectedFile) {
         const newTree: DialogueTree = JSON.parse(JSON.stringify(selectedFile.content));
         setDialogueTree(newTree);
@@ -198,10 +207,10 @@ export const DialogueEditor: React.FC = () => {
         <div className='editor-controls'>
           <select
             value={selectedTemplatePath}
-            onChange={handleTemplateSelect}
+            onChange={(e) => setSelectedTemplatePath(e.target.value)}
             className='template-select'
           >
-            {dialogueFiles.map((file) => (
+            {templates.map((file) => (
               <option
                 key={file.path}
                 value={file.path}
@@ -227,7 +236,9 @@ export const DialogueEditor: React.FC = () => {
                 className='picture-url-input'
               />
             ) : (
-              <span className='current-picture'>{dialogueTree.characterPicture || 'No picture set'}</span>
+              <span className='current-picture'>
+                {dialogueTree.characters.default?.portraits.default || 'No picture set'}
+              </span>
             )}
             <button
               onClick={handlePictureEdit}
@@ -274,6 +285,12 @@ export const DialogueEditor: React.FC = () => {
           >
             Export Script
           </button>
+          <button
+            onClick={() => setIsCharacterManagerOpen(true)}
+            className='character-manager-button'
+          >
+            👥 Characters
+          </button>
         </div>
       </div>
 
@@ -305,6 +322,13 @@ export const DialogueEditor: React.FC = () => {
         dialogueTree={dialogueTree}
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
+      />
+
+      <CharacterManager
+        dialogueTree={dialogueTree}
+        isOpen={isCharacterManagerOpen}
+        onClose={() => setIsCharacterManagerOpen(false)}
+        onUpdate={setDialogueTree}
       />
     </div>
   );

@@ -1,18 +1,31 @@
 {
   "name": "Tutorial",
-  "character": "guide",
-  "characterName": "Guide",
-  "characterPicture": "/characters/guide/default.png",
-  "emotions": {
-    "default": "/characters/guide/default.png",
-    "happy": "/characters/guide/happy.png",
-    "excited": "/characters/guide/excited.png",
-    "thoughtful": "/characters/guide/thoughtful.png"
+  "characters": {
+    "guide": {
+      "name": "Guide",
+      "defaultEmotion": "default",
+      "portraits": {
+        "default": "/characters/guide/default.webp",
+        "happy": "/characters/guide/happy.webp",
+        "excited": "/characters/guide/excited.webp",
+        "thoughtful": "/characters/guide/thoughtful.webp"
+      }
+    },
+    "assistant": {
+      "name": "Assistant",
+      "defaultEmotion": "default",
+      "portraits": {
+        "default": "/characters/assistant/default.webp",
+        "friendly": "/characters/assistant/friendly.webp",
+        "helpful": "/characters/assistant/helpful.webp"
+      }
+    }
   },
   "startNodeId": "intro",
   "nodes": {
     "intro": {
       "id": "intro",
+      "character": "guide",
       "speaker": "Guide",
       "text": "Welcome to the [color=royalblue]Dialogue Editor[/color]! I'll show you how everything works.",
       "emotion": "excited",
@@ -56,6 +69,7 @@
     },
     "formatting": {
       "id": "formatting",
+      "character": "guide",
       "speaker": "Guide",
       "text": "You can make text [b]bold[/b], [i]italic[/i], or [s]strikethrough[/s]. You can also add [color=red]colors[/color] to your text!",
       "emotion": "happy",
@@ -69,6 +83,7 @@
     },
     "formatting2": {
       "id": "formatting2",
+      "character": "guide",
       "speaker": "Guide",
       "text": "You can also change my [color=purple]emotion[/color] to match the dialogue's mood!",
       "emotion": "excited",
@@ -94,6 +109,7 @@
     },
     "variables": {
       "id": "variables",
+      "character": "guide",
       "speaker": "Guide",
       "text": "Variables let you show dynamic values! For example: You have {$$gold} gold coins.",
       "emotion": "thoughtful",
@@ -107,6 +123,7 @@
     },
     "variables2": {
       "id": "variables2",
+      "character": "guide",
       "speaker": "Guide",
       "text": "Yes! Try changing the values in the game state panel. Watch this text update: {$$gold} gold coins!",
       "emotion": "excited",
@@ -127,6 +144,7 @@
     },
     "conditions": {
       "id": "conditions",
+      "character": "guide",
       "speaker": "Guide",
       "text": "Conditions let you control what choices appear based on flags and variables.",
       "emotion": "thoughtful",
@@ -172,13 +190,14 @@
     },
     "export_info": {
       "id": "export_info",
+      "character": "guide",
       "speaker": "Guide",
       "text": "You can export your dialogue as a Godot resource (.tres) file! Click the 'Export Resource' button in the toolbar.",
       "emotion": "thoughtful",
       "choices": [
         {
           "id": "choice_export_2",
-          "text": "What about the character pictures?",
+          "text": "What about character portraits?",
           "nextNodeId": "export_pictures"
         },
         {
@@ -190,6 +209,7 @@
     },
     "export_script": {
       "id": "export_script",
+      "character": "guide",
       "speaker": "Guide",
       "text": "When you export, you'll get both a .tres resource and a .gd script. The script handles all the dialogue logic in Godot.",
       "emotion": "thoughtful",
@@ -203,6 +223,7 @@
     },
     "export_future": {
       "id": "export_future",
+      "character": "guide",
       "speaker": "Guide",
       "text": "Yes! Once the system is stable, there will be a ready-to-use dialogue scene in the Godot Asset Library. For now, you'll need to set up the scene yourself.",
       "emotion": "excited",
@@ -216,9 +237,24 @@
     },
     "export_pictures": {
       "id": "export_pictures",
-      "speaker": "Guide",
-      "text": "You'll need to update the picture paths in your project to match your Godot project structure. Make sure to put your character pictures in your project's assets!",
-      "emotion": "thoughtful",
+      "character": "assistant",
+      "speaker": "Assistant",
+      "text": "Each character's portraits will be exported with the dialogue. Just make sure to put your character pictures in your Godot project's assets folder!",
+      "emotion": "helpful",
+      "choices": [
+        {
+          "id": "choice_export_paths",
+          "text": "How do I organize the files?",
+          "nextNodeId": "export_paths"
+        }
+      ]
+    },
+    "export_paths": {
+      "id": "export_paths",
+      "character": "assistant",
+      "speaker": "Assistant",
+      "text": "We recommend organizing your characters like this:\n[color=gray]res://characters/character_name/emotion.png[/color]\nFor example: [color=gray]res://characters/guide/default.png[/color]",
+      "emotion": "friendly",
       "choices": [
         {
           "id": "choice_export_3",
@@ -229,19 +265,26 @@
     },
     "portraits_info": {
       "id": "portraits_info",
+      "character": "guide",
       "speaker": "Guide",
-      "text": "Right now I don't have a portrait, but you can add one! Click 'Edit Picture' in the toolbar and paste an image URL.",
-      "emotion": "thoughtful",
+      "text": "Characters are managed in the Characters editor! Click the '👥 Characters' button in the toolbar to open it.",
+      "emotion": "excited",
       "choices": [
         {
           "id": "choice_portraits_2",
           "text": "What about different emotions?",
           "nextNodeId": "portraits_emotions"
+        },
+        {
+          "id": "choice_meet_assistant",
+          "text": "Can I have multiple characters?",
+          "nextNodeId": "meet_assistant"
         }
       ]
     },
     "portraits_emotions": {
       "id": "portraits_emotions",
+      "character": "guide",
       "speaker": "Guide",
       "text": "Each character can have different portraits for different emotions. Add them in the character's emotions section when you export to Godot.",
       "emotion": "excited",
@@ -253,8 +296,37 @@
         }
       ]
     },
+    "meet_assistant": {
+      "id": "meet_assistant",
+      "character": "assistant",
+      "speaker": "Assistant",
+      "text": "Yes! I'm another character in this dialogue. Each character can have their own set of portraits and emotions.",
+      "emotion": "friendly",
+      "choices": [
+        {
+          "id": "choice_character_system",
+          "text": "How does the character system work?",
+          "nextNodeId": "character_system"
+        }
+      ]
+    },
+    "character_system": {
+      "id": "character_system",
+      "character": "assistant",
+      "speaker": "Assistant",
+      "text": "Each character has a name, default emotion, and a set of portrait images for different emotions. You can manage all of this in the Characters editor.",
+      "emotion": "helpful",
+      "choices": [
+        {
+          "id": "choice_back_to_guide",
+          "text": "Thanks for explaining!",
+          "nextNodeId": "portraits_emotions"
+        }
+      ]
+    },
     "alternate_info": {
       "id": "alternate_info",
+      "character": "guide",
       "speaker": "Guide",
       "text": "Alternate texts let you show different dialogue based on conditions! Try setting the flag 'saw_alternate' to see this text change.",
       "emotion": "excited",
@@ -282,6 +354,7 @@
     },
     "alternate_examples": {
       "id": "alternate_examples",
+      "character": "guide",
       "speaker": "Guide",
       "text": "You have {$$gold} gold. That's not much...",
       "emotion": "thoughtful",
@@ -310,6 +383,7 @@
     },
     "alternate_paths": {
       "id": "alternate_paths",
+      "character": "guide",
       "speaker": "Guide",
       "text": "Choices can have alternate destinations based on conditions! This choice has two possible paths.",
       "emotion": "excited",
@@ -337,6 +411,7 @@
     },
     "paths_poor": {
       "id": "paths_poor",
+      "character": "guide",
       "speaker": "Guide",
       "text": "With only {$$gold} gold, you took the normal path. Try getting more gold and clicking that choice again!",
       "emotion": "thoughtful",
@@ -350,6 +425,7 @@
     },
     "paths_rich": {
       "id": "paths_rich",
+      "character": "guide",
       "speaker": "Guide",
       "text": "With {$$gold} gold, you took the alternate path! Alternate paths are shown with animated lines in the graph.",
       "emotion": "excited",
@@ -363,6 +439,7 @@
     },
     "locks_info": {
       "id": "locks_info",
+      "character": "guide",
       "speaker": "Guide",
       "text": "Paths can be locked by conditions, shown with a 🔒 icon. Or they can be blockable, shown with a ⚠️ icon.",
       "emotion": "thoughtful",
@@ -412,6 +489,7 @@
     },
     "locks_rich": {
       "id": "locks_rich",
+      "character": "guide",
       "speaker": "Guide",
       "text": "You unlocked this path with {$$gold} gold! Locked paths show as dashed lines in the graph.",
       "emotion": "excited",
@@ -425,6 +503,7 @@
     },
     "locks_blocked": {
       "id": "locks_blocked",
+      "character": "guide",
       "speaker": "Guide",
       "text": "This path can be blocked by setting the 'is_blocked' flag. Try toggling it!",
       "emotion": "thoughtful",
@@ -438,6 +517,7 @@
     },
     "state_changes": {
       "id": "state_changes",
+      "character": "guide",
       "speaker": "Guide",
       "text": "Yes! Choices can add or remove flags, and modify state values. This choice will give you 50 gold and add a flag.",
       "emotion": "excited",
@@ -460,6 +540,7 @@
     },
     "state_changes_result": {
       "id": "state_changes_result",
+      "character": "guide",
       "speaker": "Guide",
       "text": "You now have {$$gold} gold.",
       "emotion": "thoughtful",
@@ -490,6 +571,7 @@
     },
     "editor_info": {
       "id": "editor_info",
+      "character": "guide",
       "speaker": "Guide",
       "text": "Double-click any node to open the editor. You can edit the text, speaker, and emotion there. The inspector panel on the right shows more options based on what you select.",
       "emotion": "thoughtful",
@@ -508,6 +590,7 @@
     },
     "editor_states": {
       "id": "editor_states",
+      "character": "guide",
       "speaker": "Guide",
       "text": "When you add state values or flags in any node's conditions, they automatically appear in the preview panel. Try it with the {$$gold} value!",
       "emotion": "excited",
@@ -521,6 +604,7 @@
     },
     "editor_alternates": {
       "id": "editor_alternates",
+      "character": "guide",
       "speaker": "Guide",
       "text": "Click 'Add Alternate Text' to add variations of the dialogue. For choices, select a choice and use the inspector to add alternate paths or conditions.",
       "emotion": "thoughtful",
@@ -534,6 +618,7 @@
     },
     "editor_nodes": {
       "id": "editor_nodes",
+      "character": "guide",
       "speaker": "Guide",
       "text": "Type a new ID in any choice's 'Next Node' field and click 'Create Node'. You can also add choices to the current node with the 'Add Choice' button.",
       "emotion": "excited",

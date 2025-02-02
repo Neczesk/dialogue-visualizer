@@ -27,8 +27,12 @@ export const DialogueNodeEditor: React.FC<DialogueNodeEditorProps> = ({
   const [editedNode, setEditedNode] = useState<DialogueNode>({ ...node });
   const [inspectorTarget, setInspectorTarget] = useState<InspectorTarget | null>(null);
   const [emotion, setEmotion] = useState(node.emotion || '');
+  const [selectedCharacter, setSelectedCharacter] = useState(node.character || Object.keys(dialogueTree.characters)[0]);
+  const [speakerName, setSpeakerName] = useState(
+    node.speaker || dialogueTree.characters[selectedCharacter]?.name || ''
+  );
 
-  const availableEmotions = Object.keys(dialogueTree.emotions);
+  const availableEmotions = Object.keys(dialogueTree.characters[selectedCharacter]?.portraits || {});
 
   // Collect all flags and state values from the dialogue tree
   const { existingFlags, existingStateKeys } = React.useMemo(() => {
@@ -94,6 +98,8 @@ export const DialogueNodeEditor: React.FC<DialogueNodeEditorProps> = ({
     const nodeToSave = {
       ...editedNode,
       emotion,
+      character: selectedCharacter,
+      speaker: speakerName,
     };
 
     console.log('DialogueNodeEditor handleSave - after:', nodeToSave);
@@ -123,6 +129,13 @@ export const DialogueNodeEditor: React.FC<DialogueNodeEditorProps> = ({
     console.log('DialogueNodeEditor editedNode changed:', editedNode);
   }, [editedNode]);
 
+  // Update speaker name when character changes
+  useEffect(() => {
+    if (!node.speaker) {
+      setSpeakerName(dialogueTree.characters[selectedCharacter]?.name || '');
+    }
+  }, [selectedCharacter]);
+
   if (!isOpen) return null;
 
   return (
@@ -148,11 +161,28 @@ export const DialogueNodeEditor: React.FC<DialogueNodeEditorProps> = ({
                 <h4>Character</h4>
               </div>
               <div className='input-group'>
-                <label>Speaker</label>
+                <label>Character:</label>
+                <select
+                  value={selectedCharacter}
+                  onChange={(e) => setSelectedCharacter(e.target.value)}
+                >
+                  {Object.entries(dialogueTree.characters).map(([id, char]) => (
+                    <option
+                      key={id}
+                      value={id}
+                    >
+                      {char.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className='input-group'>
+                <label>Display Name:</label>
                 <input
                   type='text'
-                  value={editedNode.speaker}
-                  onChange={(e) => setEditedNode((prev) => ({ ...prev, speaker: e.target.value }))}
+                  value={speakerName}
+                  onChange={(e) => setSpeakerName(e.target.value)}
+                  placeholder='Custom speaker name...'
                 />
               </div>
               <div className='input-group'>

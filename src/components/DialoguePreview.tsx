@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { DialogueTree, DialogueChoice, StateCondition, DialogueNode } from '../types/DialogueTypes';
 import { replaceVariables, extractVariables } from '../utils/textParser';
 import { BBCodeRenderer } from './BBCodeRenderer';
@@ -17,14 +17,85 @@ interface DialoguePreviewProps {
   onClose: () => void;
 }
 
+// Add these helper functions at the top
+const getCharacterPortrait = (
+  node: DialogueNode | undefined,
+  characters: DialogueTree['characters']
+): string | undefined => {
+  if (!node?.character) return undefined;
+  const character = characters[node.character];
+  if (!character?.portraits) return undefined;
+
+  if (node.emotion && character.portraits[node.emotion]) {
+    return character.portraits[node.emotion];
+  }
+  return character.portraits[character.defaultEmotion];
+};
+
+const isChoiceAvailable = (
+  choice: DialogueChoice,
+  gameFlags: Set<string>,
+  gameState: Record<string, number>
+): boolean => {
+  if (!choice.prerequisites) return true;
+
+  const { requiredFlags, blockedFlags, stateConditions } = choice.prerequisites;
+
+  // Check required flags
+  if (requiredFlags?.some((flag) => !gameFlags.has(flag))) return false;
+
+  // Check blocked flags
+  if (blockedFlags?.some((flag) => gameFlags.has(flag))) return false;
+
+  // Check state conditions
+  if (stateConditions?.some((condition) => !checkStateCondition(condition, gameState))) return false;
+
+  return true;
+};
+
+const checkStateCondition = (condition: StateCondition, gameState: Record<string, number>): boolean => {
+  const value = gameState[condition.key] ?? 0;
+  switch (condition.operator) {
+    case '=':
+      return value === condition.value;
+    case '>':
+      return value > condition.value;
+    case '<':
+      return value < condition.value;
+    case '>=':
+      return value >= condition.value;
+    case '<=':
+      return value <= condition.value;
+    default:
+      return false;
+  }
+};
+
+const getChoiceTooltip = (choice: DialogueChoice, gameFlags: Set<string>): string => {
+  if (!choice.prerequisites) return '';
+  const { requiredFlags, blockedFlags, stateConditions } = choice.prerequisites;
+  const reasons: string[] = [];
+
+  if (requiredFlags?.some((flag) => !gameFlags.has(flag))) {
+    reasons.push(`Required flags: ${requiredFlags.join(', ')}`);
+  }
+
+  if (blockedFlags?.some((flag) => gameFlags.has(flag))) {
+    reasons.push(`Blocked by flags: ${blockedFlags.join(', ')}`);
+  }
+
+  if (stateConditions?.length) {
+    reasons.push(`State conditions not met`);
+  }
+
+  return reasons.join('\n');
+};
+
 export const DialoguePreview: React.FC<DialoguePreviewProps> = ({ dialogueTree, isOpen, onClose }) => {
   const [currentNodeId, setCurrentNodeId] = useState(dialogueTree.startNodeId);
   const [messages, setMessages] = useState<Message[]>([]);
   const [gameFlags, setGameFlags] = useState(new Set<string>());
-  const [gameState, setGameState] = useState<Record<string, number>>(() => ({
-    gold: 100,
-    jonas_weight: 450,
-  }));
+  const [gameState, setGameState] = useState<Record<string, number>>({});
   const [showFlagManager, setShowFlagManager] = useState(false);
   const [failedEmotionUrls, setFailedEmotionUrls] = useState<Set<string>>(new Set());
 
@@ -113,9 +184,6 @@ export const DialoguePreview: React.FC<DialoguePreviewProps> = ({ dialogueTree, 
     });
   }, [allStateKeys]);
 
-  // Add this near the top of the component to debug
-  console.log('Game State:', gameState);
-
   const toggleFlag = (flag: string) => {
     setGameFlags((prev) => {
       const next = new Set(prev);
@@ -126,6 +194,33 @@ export const DialoguePreview: React.FC<DialoguePreviewProps> = ({ dialogueTree, 
       }
       return next;
     });
+  };
+
+  const getNodeTextAndEmotion = (node: DialogueNode | undefined) => {
+    if (!node) return { text: '' };
+
+    const alternateText = node.alternateTexts?.find((alt) => {
+      if (!alt.prerequisites) return false;
+      const { requiredFlags, blockedFlags, stateConditions } = alt.prerequisites;
+
+      if (requiredFlags?.some((flag) => !gameFlags.has(flag))) return false;
+      if (blockedFlags?.some((flag) => gameFlags.has(flag))) return false;
+      if (stateConditions?.some((condition) => !checkStateCondition(condition, gameState))) return false;
+
+      return true;
+    });
+
+    if (alternateText) {
+      return {
+        text: alternateText.text,
+        emotion: alternateText.emotion || node.emotion,
+      };
+    }
+
+    return {
+      text: node.text,
+      emotion: node.emotion,
+    };
   };
 
   // Update messages when flags or state changes
@@ -174,232 +269,69 @@ export const DialoguePreview: React.FC<DialoguePreviewProps> = ({ dialogueTree, 
     }
   }, [isOpen, dialogueTree, resetConversation]);
 
-  const currentNode = dialogueTree.nodes[currentNodeId];
-
-  const checkStateCondition = (condition: StateCondition): boolean => {
-    const currentValue = gameState[condition.key] ?? 0;
-    switch (condition.operator) {
-      case '=':
-        return currentValue === condition.value;
-      case '>':
-        return currentValue > condition.value;
-      case '<':
-        return currentValue < condition.value;
-      case '>=':
-        return currentValue >= condition.value;
-      case '<=':
-        return currentValue <= condition.value;
-      default:
-        return false;
-    }
-  };
-
-  const isChoiceAvailable = (choice: DialogueChoice | undefined) => {
-    if (!choice?.prerequisites) return true;
-
-    const { requiredFlags = [], blockedFlags = [], stateConditions = [] } = choice.prerequisites;
-
-    return (
-      requiredFlags.every((flag) => gameFlags.has(flag)) &&
-      !blockedFlags.some((flag) => gameFlags.has(flag)) &&
-      stateConditions.every(checkStateCondition)
-    );
-  };
+  const currentNode = dialogueTree?.nodes[currentNodeId];
+  const portraitUrl = getCharacterPortrait(currentNode, dialogueTree?.characters || {});
 
   const handleChoice = (choice: DialogueChoice) => {
-    // Add player's choice to messages first
-    setMessages((prev) => [...prev, { text: choice.text, speaker: 'Player', isPlayer: true }]);
+    const nextNode = dialogueTree.nodes[choice.nextNodeId];
+    if (!nextNode) return;
 
-    // Handle flag changes
+    // Apply flag changes
     if (choice.flagChanges) {
-      if (choice.flagChanges.add) {
-        setGameFlags((prev) => {
-          const next = new Set(prev);
-          choice.flagChanges?.add?.forEach((flag) => next.add(flag));
-          return next;
-        });
-      }
-      if (choice.flagChanges.remove) {
-        setGameFlags((prev) => {
-          const next = new Set(prev);
-          choice.flagChanges?.remove?.forEach((flag) => next.delete(flag));
-          return next;
-        });
-      }
+      setGameFlags((prev) => {
+        const next = new Set(prev);
+        choice.flagChanges?.add?.forEach((flag) => next.add(flag));
+        choice.flagChanges?.remove?.forEach((flag) => next.delete(flag));
+        return next;
+      });
     }
 
-    // Handle state changes
+    // Apply state changes
     if (choice.stateChanges) {
       setGameState((prev) => {
         const next = { ...prev };
         choice.stateChanges?.forEach((change) => {
-          next[change.key] = (next[change.key] || 0) + change.value;
+          const currentValue = next[change.key] ?? 0;
+          if (change.operation === 'add') {
+            next[change.key] = currentValue + change.value;
+          } else if (change.operation === 'subtract') {
+            next[change.key] = currentValue - change.value;
+          } else {
+            next[change.key] = change.value;
+          }
         });
         return next;
       });
     }
 
-    // Find the first matching alternate destination
-    const alternateDestination = choice.alternateDestinations?.find((dest) => {
-      const { requiredFlags = [], blockedFlags = [], stateConditions = [] } = dest.prerequisites;
+    // Add messages
+    setMessages((prev) => [
+      ...prev,
+      {
+        text: choice.text,
+        speaker: 'You',
+        isPlayer: true,
+      },
+      {
+        text: getNodeTextAndEmotion(nextNode).text,
+        originalText: nextNode.text,
+        speaker: nextNode.speaker,
+        emotion: nextNode.emotion,
+        isPlayer: false,
+      },
+    ]);
 
-      const flagsMatch =
-        requiredFlags.every((flag) => gameFlags.has(flag)) && !blockedFlags.some((flag) => gameFlags.has(flag));
-
-      const stateConditionsMatch = stateConditions.every((condition) => {
-        const currentValue = gameState[condition.key] || 0;
-        switch (condition.operator) {
-          case '=':
-            return currentValue === condition.value;
-          case '>':
-            return currentValue > condition.value;
-          case '<':
-            return currentValue < condition.value;
-          case '>=':
-            return currentValue >= condition.value;
-          case '<=':
-            return currentValue <= condition.value;
-          default:
-            return false;
-        }
-      });
-
-      return flagsMatch && stateConditionsMatch;
-    });
-
-    // Use alternate destination if conditions match, otherwise use default
-    const nextNodeId = alternateDestination?.nextNodeId || choice.nextNodeId;
-    const nextNode = dialogueTree.nodes[nextNodeId];
-
-    if (nextNode) {
-      const { text, emotion } = getNodeTextAndEmotion(nextNode);
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          text,
-          originalText: nextNode.text,
-          speaker: nextNode.speaker,
-          emotion,
-          isPlayer: false,
-        },
-      ]);
-
-      setCurrentNodeId(nextNodeId);
-    }
+    // Update current node
+    setCurrentNodeId(choice.nextNodeId);
   };
 
-  const getChoiceTooltip = (choice: DialogueChoice): string => {
-    const conditions: string[] = [];
-
-    if (choice.prerequisites) {
-      if (choice.prerequisites.requiredFlags?.length) {
-        const missing = choice.prerequisites.requiredFlags.filter((flag) => !gameFlags.has(flag));
-        if (missing.length) {
-          conditions.push(`Missing flags: ${missing.join(', ')}`);
-        }
-      }
-
-      if (choice.prerequisites.blockedFlags?.length) {
-        const blocking = choice.prerequisites.blockedFlags.filter((flag) => gameFlags.has(flag));
-        if (blocking.length) {
-          conditions.push(`Blocked by flags: ${blocking.join(', ')}`);
-        }
-      }
-
-      if (choice.prerequisites.stateConditions?.length) {
-        const failedConditions = choice.prerequisites.stateConditions.filter(
-          (condition) => !checkStateCondition(condition)
-        );
-        if (failedConditions.length) {
-          conditions.push(
-            'Required states:\n' +
-              failedConditions
-                .map((condition) => `${condition.key} ${condition.operator} ${condition.value}`)
-                .join('\n')
-          );
-        }
-      }
-    }
-
-    return conditions.join('\n');
-  };
-
-  const getNodeTextAndEmotion = (node: DialogueNode): { text: string; emotion?: string } => {
-    if (!node.alternateTexts?.length) {
-      return {
-        text: replaceVariables(node.text, gameState),
-        emotion: node.emotion,
-      };
-    }
-
-    // Find the first matching alternate text
-    const matchingAlternate = node.alternateTexts.find((alt) => {
-      if (!alt.prerequisites) return false;
-
-      const { requiredFlags = [], blockedFlags = [], stateConditions = [] } = alt.prerequisites;
-
-      const flagsMatch =
-        requiredFlags.every((flag) => gameFlags.has(flag)) && !blockedFlags.some((flag) => gameFlags.has(flag));
-
-      const stateConditionsMatch = stateConditions.every((condition) => {
-        const currentValue = gameState[condition.key] || 0;
-        switch (condition.operator) {
-          case '=':
-            return currentValue === condition.value;
-          case '>':
-            return currentValue > condition.value;
-          case '<':
-            return currentValue < condition.value;
-          case '>=':
-            return currentValue >= condition.value;
-          case '<=':
-            return currentValue <= condition.value;
-          default:
-            return false;
-        }
-      });
-
-      return flagsMatch && stateConditionsMatch;
-    });
-
-    return {
-      text: replaceVariables(matchingAlternate?.text || node.text, gameState),
-      emotion: matchingAlternate?.emotion || node.emotion,
-    };
-  };
-
-  // Update the getPortraitUrl function with better null checks
-  const getPortraitUrl = (node: DialogueNode, message: Message | null): string => {
-    if (!dialogueTree.emotions) return dialogueTree.characterPicture;
-
-    const emotionToUse = message?.emotion || node?.emotion;
-
-    if (
-      emotionToUse &&
-      dialogueTree.emotions[emotionToUse] &&
-      !failedEmotionUrls.has(dialogueTree.emotions[emotionToUse])
-    ) {
-      return dialogueTree.emotions[emotionToUse];
-    }
-    return dialogueTree.emotions.default || dialogueTree.characterPicture;
-  };
-
-  // Update the portrait URL memo with null checks
-  const portraitUrl = useMemo(() => {
-    if (!currentNode || !messages.length) return dialogueTree.characterPicture;
-
-    const currentMessage = messages[messages.length - 1];
-    return getPortraitUrl(currentNode, currentMessage);
-  }, [currentNode, messages, dialogueTree, failedEmotionUrls]);
-
-  if (!isOpen) return null;
+  if (!isOpen || !dialogueTree || !currentNode) return null;
 
   return (
     <div className='modal-overlay'>
       <div className='dialogue-preview-modal'>
         <div className='preview-header'>
-          <h3>Dialogue Preview - {dialogueTree.characterName}</h3>
+          <h3>Dialogue Preview - {currentNode?.speaker}</h3>
           <div className='preview-controls'>
             <button
               onClick={() => setShowFlagManager(!showFlagManager)}
@@ -478,26 +410,23 @@ export const DialoguePreview: React.FC<DialoguePreviewProps> = ({ dialogueTree, 
             <img
               className='character-portrait'
               src={portraitUrl}
-              alt={dialogueTree.characterName}
+              alt={`${currentNode?.speaker || 'Unknown'} - ${currentNode?.emotion || 'default'}`}
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 const failedUrl = target.src;
 
-                // Only update if we haven't already marked this URL as failed
                 if (!failedEmotionUrls.has(failedUrl)) {
                   setFailedEmotionUrls((prev) => new Set([...prev, failedUrl]));
-
-                  // Set the fallback URL directly
-                  const fallbackUrl = dialogueTree.emotions.default || dialogueTree.characterPicture;
-                  if (fallbackUrl !== failedUrl) {
-                    target.src = fallbackUrl;
+                  const character = dialogueTree.characters[currentNode.character];
+                  if (character?.portraits?.default !== failedUrl) {
+                    target.src = character?.portraits?.default;
                   }
                 }
               }}
             />
             <div className='character-portrait-info'>
-              <div className='character-portrait-name'>{dialogueTree.characterName}</div>
-              {messages[messages.length - 1]?.emotion && dialogueTree.emotions && (
+              <div className='character-portrait-name'>{currentNode?.speaker}</div>
+              {messages[messages.length - 1]?.emotion && (
                 <div className='character-portrait-emotion'>{messages[messages.length - 1].emotion}</div>
               )}
             </div>
@@ -522,8 +451,8 @@ export const DialoguePreview: React.FC<DialoguePreviewProps> = ({ dialogueTree, 
             </div>
             <div className='choices-container'>
               {currentNode?.choices?.map((choice) => {
-                const isAvailable = isChoiceAvailable(choice);
-                const tooltip = !isAvailable ? getChoiceTooltip(choice) : '';
+                const isAvailable = isChoiceAvailable(choice, gameFlags, gameState);
+                const tooltip = !isAvailable ? getChoiceTooltip(choice, gameFlags) : '';
                 const processedText = replaceVariables(choice.text, gameState);
 
                 return (

@@ -1,0 +1,125 @@
+.character-manager-modal {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-background);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  width: 800px;
+  max-height: 80vh;
+}
+
+.character-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.character-manager-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 16px;
+  margin-bottom: 24px;
+}
+
+.add-character-button {
+  align-self: flex-start;
+  margin-bottom: 16px;
+}
+
+.character-item {
+  background: var(--color-background-secondary);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.character-header {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.character-name-input {
+  flex: 2;
+}
+
+.default-emotion-select {
+  flex: 1;
+}
+
+.portrait-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.portrait-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.portrait-emotion {
+  min-width: 100px;
+  color: var(--color-text);
+}
+
+.portrait-url-input {
+  flex: 1;
+}
+
+.add-portrait {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.new-emotion-input {
+  width: 150px;
+}
+
+.new-url-input {
+  flex: 1;
+}
+
+/* ... add more styles as needed ... */
+input {
+  background-color: var(--color-background-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  margin-bottom: 8px;
+  color: var(--color-text);
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.character-manager-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.character-manager-footer button {
+  min-width: 100px;
+}
+
+.delete-character-button {
+  padding: 4px 8px;
+  background: var(--color-background-danger);
+  border: 1px solid var(--color-border-danger);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.delete-character-button:hover {
+  background: var(--color-background-danger-hover);
+}

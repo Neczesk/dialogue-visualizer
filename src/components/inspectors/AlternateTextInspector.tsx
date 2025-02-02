@@ -43,12 +43,13 @@ export const AlternateTextInspector: React.FC<AlternateTextInspectorProps> = ({
             value=''
             onChange={(flag) => {
               const current = alternateText.prerequisites?.requiredFlags || [];
+              const updatedPrerequisites = {
+                ...alternateText.prerequisites,
+                requiredFlags: current.filter((f) => f !== flag) || [],
+              };
               onUpdate({
                 ...alternateText,
-                prerequisites: {
-                  ...alternateText.prerequisites,
-                  requiredFlags: [...current, flag],
-                },
+                prerequisites: updatedPrerequisites,
               });
             }}
             suggestions={existingFlags}
@@ -67,7 +68,7 @@ export const AlternateTextInspector: React.FC<AlternateTextInspectorProps> = ({
                       ...alternateText,
                       prerequisites: {
                         ...alternateText.prerequisites,
-                        requiredFlags: alternateText.prerequisites.requiredFlags?.filter((f) => f !== flag),
+                        requiredFlags: alternateText?.prerequisites?.requiredFlags?.filter((f) => f !== flag) || [],
                       },
                     })
                   }
@@ -110,7 +111,7 @@ export const AlternateTextInspector: React.FC<AlternateTextInspectorProps> = ({
                     ...alternateText,
                     prerequisites: {
                       ...alternateText.prerequisites,
-                      stateConditions: alternateText.prerequisites.stateConditions?.map((c, i) =>
+                      stateConditions: alternateText?.prerequisites?.stateConditions?.map((c, i) =>
                         i === index ? { ...c, key: value } : c
                       ),
                     },
@@ -126,7 +127,7 @@ export const AlternateTextInspector: React.FC<AlternateTextInspectorProps> = ({
                     ...alternateText,
                     prerequisites: {
                       ...alternateText.prerequisites,
-                      stateConditions: alternateText.prerequisites.stateConditions?.map((c, i) =>
+                      stateConditions: alternateText?.prerequisites?.stateConditions?.map((c, i) =>
                         i === index ? { ...c, operator: e.target.value as ComparisonOperator } : c
                       ),
                     },
@@ -147,7 +148,7 @@ export const AlternateTextInspector: React.FC<AlternateTextInspectorProps> = ({
                     ...alternateText,
                     prerequisites: {
                       ...alternateText.prerequisites,
-                      stateConditions: alternateText.prerequisites.stateConditions?.map((c, i) =>
+                      stateConditions: alternateText?.prerequisites?.stateConditions?.map((c, i) =>
                         i === index ? { ...c, value: Number(e.target.value) } : c
                       ),
                     },
@@ -160,7 +161,8 @@ export const AlternateTextInspector: React.FC<AlternateTextInspectorProps> = ({
                     ...alternateText,
                     prerequisites: {
                       ...alternateText.prerequisites,
-                      stateConditions: alternateText.prerequisites.stateConditions?.filter((_, i) => i !== index),
+                      stateConditions:
+                        alternateText?.prerequisites?.stateConditions?.filter((_, i) => i !== index) || [],
                     },
                   })
                 }

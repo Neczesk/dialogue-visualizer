@@ -1,66 +1,78 @@
 import { DialogueTree } from '../types/DialogueTypes';
 
-// Convert markdown to BBCode
-const markdownToBBCode = (text: string): string => {
-  return (
-    text
-      // Bold: *text* or **text** -> [b]text[/b]
-      .replace(/\*\*?(.*?)\*\*?/g, '[b]$1[/b]')
-      // Italic: _text_ -> [i]text[/i]
-      .replace(/_(.*?)_/g, '[i]$1[/i]')
-      // Strikethrough: ~~text~~ -> [s]text[/s]
-      .replace(/~~(.*?)~~/g, '[s]$1[/s]')
-      // Headers: # text -> [font_size=24]text[/font_size]
-      .replace(/^# (.*?)$/gm, '[font_size=24]$1[/font_size]')
-      // Subheaders: ## text -> [font_size=20]text[/font_size]
-      .replace(/^## (.*?)$/gm, '[font_size=20]$1[/font_size]')
-      // Links: [text](url) -> [url=url]text[/url]
-      .replace(/\[(.*?)\]\((.*?)\)/g, '[url=$2]$1[/url]')
-      // Convert our color tags to BBCode color tags
-      .replace(/\[color=(.*?)\](.*?)\[\/color\]/g, '[color=$1]$2[/color]')
-  );
-};
-
 const convertToTRES = (dialogueTree: DialogueTree): string => {
   // Helper to convert any object to Godot resource syntax
-  const objectToTRES = (obj: object, indent: string = ''): string => {
-    if (Array.isArray(obj)) {
-      if (obj.length === 0) return '[]';
-      return `[${obj.map((item) => objectToTRES(item, indent)).join(', ')}]`;
-    }
-
-    if (typeof obj === 'object' && obj !== null) {
-      const entries = Object.entries(obj).filter(([, value]) => value !== undefined);
-      if (entries.length === 0) return '{}';
-      return `{${entries
-        .map(([key, value]) => {
-          // Convert text fields to BBCode
-          if (key === 'text') {
-            return `"${key}": "${markdownToBBCode(value as string)}"`;
-          }
-          return `"${key}": ${objectToTRES(value, indent)}`;
-        })
-        .join(', ')}}`;
-    }
-
-    if (typeof obj === 'string') return `"${(obj as string).replace(/"/g, '\\"')}"`;
-    if (typeof obj === 'boolean') return obj ? 'true' : 'false';
-    return String(obj);
-  };
 
   return `[gd_resource type="Resource" script_class="DialogueTree" load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/dialogue_tree.gd" id="1_script"]
+[ext_resource type="Script" path="res://addons/dialogue_tree/dialogue_tree.gd" id="1_script"]
 
 [resource]
 script = ExtResource("1_script")
 name = "${dialogueTree.name}"
-character = "${dialogueTree.character}"
-character_name = "${dialogueTree.characterName}"
-character_picture = "${dialogueTree.characterPicture}"
+characters = {
+${Object.entries(dialogueTree.characters)
+  .map(
+    ([id, char]) => `
+"${id}": {
+  "name": "${char.name}",
+  "default_emotion": "${char.defaultEmotion}",
+  "portraits": {
+    ${Object.entries(char.portraits)
+      .map(([emotion, url]) => `"${emotion}": "${url.replace(/^\//, 'res://')}"`)
+      .join(',\n    ')}
+  }
+}`
+  )
+  .join(',\n')}
+}
 start_node_id = "${dialogueTree.startNodeId}"
-emotions = ${objectToTRES(dialogueTree.emotions)}
-nodes = ${objectToTRES(dialogueTree.nodes)}`;
+nodes = {
+${Object.entries(dialogueTree.nodes)
+  .map(
+    ([id, node]) => `
+"${id}": {
+  "id": "${node.id}",
+  "character": "${node.character}",
+  "speaker": "${node.speaker}",
+  "text": "${node.text.replace(/"/g, '\\"')}",
+  "emotion": "${node.emotion || 'default'}",
+  ${
+    node.alternateTexts
+      ? `"alternate_texts": [
+    ${node.alternateTexts
+      .map(
+        (alt) => `{
+      "text": "${alt.text.replace(/"/g, '\\"')}",
+      "emotion": "${alt.emotion || 'default'}",
+      ${alt.prerequisites ? `"prerequisites": ${JSON.stringify(alt.prerequisites)}` : ''}
+    }`
+      )
+      .join(',\n    ')}
+  ],`
+      : ''
+  }
+  "choices": [
+    ${node.choices
+      .map(
+        (choice) => `{
+      "id": "${choice.id}",
+      "text": "${choice.text.replace(/"/g, '\\"')}",
+      "next_node_id": "${choice.nextNodeId}",
+      ${choice.prerequisites ? `"prerequisites": ${JSON.stringify(choice.prerequisites)},` : ''}
+      ${
+        choice.alternateDestinations ? `"alternate_destinations": ${JSON.stringify(choice.alternateDestinations)},` : ''
+      }
+      ${choice.flagChanges ? `"flag_changes": ${JSON.stringify(choice.flagChanges)},` : ''}
+      ${choice.stateChanges ? `"state_changes": ${JSON.stringify(choice.stateChanges)}` : ''}
+    }`
+      )
+      .join(',\n    ')}
+  ]
+}`
+  )
+  .join(',\n')}
+}`;
 };
 
 // Add helper function for system save dialog
@@ -90,10 +102,10 @@ const saveFileWithDialog = async (content: string, suggestedName: string, option
 };
 
 export const downloadAsGodotResource = async (dialogueTree: DialogueTree) => {
-  const tresContent = convertToTRES(dialogueTree);
+  const resourceContent = convertToTRES(dialogueTree);
   const fileName = `${dialogueTree.name.toLowerCase().replace(/\s+/g, '_')}.tres`;
 
-  await saveFileWithDialog(tresContent, fileName, {
+  await saveFileWithDialog(resourceContent, fileName, {
     types: [
       {
         description: 'Godot Resource',
