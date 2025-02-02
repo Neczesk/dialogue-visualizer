@@ -1,0 +1,501 @@
+.dialogue-editor {
+  height: 100%;
+  width: 100%;
+  padding: 0;
+}
+
+.editor-content {
+  background-color: var(--color-background);
+  padding: 16px;
+  height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  width: 100%;
+  border: none;
+  border-radius: 0;
+}
+
+/* ReactFlow Theme Styles */
+.react-flow {
+  background: var(--color-background-secondary);
+}
+
+.react-flow__node {
+  background: var(--color-background);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.react-flow__controls {
+  background: var(--color-background);
+  border-color: var(--color-border);
+}
+
+.react-flow__controls button {
+  background: var(--color-background);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.react-flow__controls button:hover {
+  background: var(--color-background-tertiary);
+}
+
+/* Edge path styles */
+.react-flow__edge-path,
+.react-flow__connection-path {
+  stroke: var(--color-border);
+}
+
+/* Edge interaction styles */
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge:focus .react-flow__edge-path,
+.react-flow__edge:focus-visible .react-flow__edge-path {
+  stroke: var(--color-primary);
+}
+
+.react-flow__edge.animated path {
+  stroke-dasharray: 5;
+  animation: dashdraw 0.5s linear infinite;
+}
+
+@keyframes dashdraw {
+  from {
+    stroke-dashoffset: 10;
+  }
+}
+
+.react-flow__node.selected {
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.react-flow__background {
+  background-color: var(--color-background-secondary);
+}
+
+.react-flow__background-pattern {
+  color: var(--color-border-light);
+}
+
+/* Node Styles */
+.dialogue-node {
+  padding: 15px;
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  width: 250px;
+  box-shadow: var(--shadow-sm);
+  transition: opacity 0.3s ease-in-out;
+}
+
+.dialogue-node-speaker {
+  font-weight: bold;
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.dialogue-node-text {
+  margin-bottom: 16px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--color-text);
+  font-style: italic;
+}
+
+.dialogue-node-choices {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  border-top: 1px solid var(--color-border-light);
+  padding-top: 8px;
+}
+
+.dialogue-node-choices-label {
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: var(--color-text-tertiary);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.dialogue-node-choice {
+  padding: 4px 0;
+  border-top: 1px solid var(--color-border-light);
+  color: var(--color-primary);
+}
+
+.dialogue-node-choice.locked {
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+.dialogue-node-choice.blockable {
+  color: var(--color-primary);
+  border-left: 2px solid var(--color-border-accent);
+  padding-left: 6px;
+  margin-left: -8px;
+}
+
+.dialogue-node-choice.broken {
+  color: var(--color-error);
+  border-left: 2px solid var(--color-error);
+  padding-left: 6px;
+  margin-left: -8px;
+}
+
+.dialogue-node-choice.blockable:hover {
+  background-color: var(--color-primary-light);
+}
+
+.dialogue-node-choice.locked:hover {
+  background-color: var(--color-background-tertiary);
+}
+
+.dialogue-node-choice.broken:hover {
+  background-color: var(--color-error-light);
+}
+
+.react-flow__edge.selected {
+  stroke: var(--color-primary);
+}
+
+/* Node and Edge opacity transitions */
+.dialogue-node,
+.react-flow__edge {
+  transition: opacity 0.3s ease-in-out;
+}
+
+.unconnected-node {
+  opacity: 0.2;
+}
+
+.unconnected-edge {
+  opacity: 0.2;
+}
+
+.connected-node,
+.connected-edge {
+  opacity: 1;
+}
+
+.dialogue-node-emotion {
+  color: var(--color-text-tertiary);
+  font-size: 12px;
+  margin-left: 8px;
+  font-weight: normal;
+  font-style: italic;
+}
+
+.alternate-text-emotion {
+  color: var(--color-text-tertiary);
+  font-size: 12px;
+  margin-left: 8px;
+  font-style: italic;
+}
+
+.text-format-toolbar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.format-button {
+  padding: 4px 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.format-button:hover {
+  background: var(--color-background-secondary);
+}
+
+.text-input-with-toolbar {
+  display: flex;
+  flex-direction: column;
+}
+
+.text-input {
+  width: 100%;
+  min-height: 100px;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: inherit;
+  resize: vertical;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.choice-text-input {
+  min-height: 60px;
+}
+
+.alternate-text-input {
+  min-height: 80px;
+}
+
+.node-text-input {
+  min-height: 100px;
+}
+
+.format-divider {
+  width: 1px;
+  background: var(--color-border);
+  margin: 0 4px;
+}
+
+.color-button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.color-button:hover {
+  opacity: 0.8;
+}
+
+.color-picker-container {
+  position: relative;
+}
+
+.color-picker-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.color-icon {
+  font-weight: bold;
+}
+
+.color-dropdown-arrow {
+  font-size: 8px;
+}
+
+.color-picker-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  box-shadow: var(--shadow-md);
+  width: 280px;
+}
+
+.color-category {
+  margin-bottom: 8px;
+}
+
+.color-category:last-child {
+  margin-bottom: 0;
+}
+
+.color-category-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+  padding: 0 4px;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+
+.color-option {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  padding: 0;
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+/* Add a white/black outline to make colors visible on any background */
+.color-option[style*='white'] {
+  outline: 1px solid #000;
+}
+
+.color-option[style*='black'] {
+  outline: 1px solid #fff;
+}
+
+.editor-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-background);
+}
+
+.editor-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.template-select {
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: 14px;
+  min-width: 150px;
+}
+
+.template-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.preview-button,
+.export-button {
+  padding: 8px 16px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  color: var(--color-primary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.preview-button:hover,
+.export-button:hover {
+  background: var(--color-primary);
+  color: var(--color-background);
+}
+
+.editor-controls-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--color-border);
+  margin: 0 8px;
+}
+
+.save-button,
+.load-button {
+  padding: 8px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.save-button:hover,
+.load-button:hover {
+  background: var(--color-background-secondary);
+  border-color: var(--color-border-accent);
+}
+
+/* Style the label to look like a button */
+.load-button {
+  display: inline-block;
+  text-align: center;
+}
+
+/* Hide the actual file input */
+input[type='file'] {
+  display: none;
+}
+
+.template-button {
+  padding: 8px 16px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: var(--color-background);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.template-button:hover {
+  background: var(--color-primary-hover);
+}
+
+.picture-edit-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.picture-url-input {
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: 14px;
+  min-width: 300px;
+}
+
+.picture-url-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.current-picture {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.picture-edit-button {
+  padding: 8px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.picture-edit-button:hover {
+  background: var(--color-background-secondary);
+  border-color: var(--color-border-accent);
+}
+
+.bbcode-text {
+  display: inline;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.dialogue-node-text .bbcode-text {
+  font-style: italic;
+}
+
+.dialogue-preview .bbcode-text {
+  font-size: 16px;
+  line-height: 1.5;
+}

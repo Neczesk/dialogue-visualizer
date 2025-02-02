@@ -1,0 +1,346 @@
+{
+  "character": "petra",
+  "characterName": "Petra",
+  "characterPicture": "https://files.oaiusercontent.com/file-TCZhj2EUbZDy8bU4ZnhQDR?se=2025-02-01T21%3A59%3A47Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D820d1f9f-d0d7-48d5-ade2-0e3647085475.webp&sig=CL66qSrFnO1xJDlhzct9fJCWakVwZJFzrnAmHju/NNY%3D",
+  "name": "Petra Conversation",
+  "emotions": {
+    "default": "https://files.oaiusercontent.com/file-WcmPoVUrgNCLRbMPipU3NF?se=2025-02-01T22%3A04%3A22Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D8819758b-c109-4334-b2cd-c519e46023d7.webp&sig=k3y0mD051ragkUVT8RXWnN2IQq84Q2dDGxdqglaajmA%3D",
+    "happy": "https://files.oaiusercontent.com/file-5iGgGbAoEXurW3QFWBxVry?se=2025-02-01T22%3A32%3A19Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D4c6ebd16-a9e5-4083-90b3-c82ccd9c27a9.webp&sig=WqRQ5tl1/UZ4qr%2Be/XtgIzg72QMxvENq5Ae8%2B8ToJs4%3D",
+    "sad": "https://files.oaiusercontent.com/file-3R5Q4g5xHnFpofGoN3PAet?se=2025-02-01T22%3A10%3A03Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D16215aa5-01c1-4472-ab33-a579938c7766.webp&sig=7L2JF5ZqQtmboAL10cew0FkKSlK0auBso1EwaDt4H/Y%3D",
+    "angry": "https://files.oaiusercontent.com/file-HX8qwvSjYCKHY5mdrC8v3L?se=2025-02-01T22%3A10%3A38Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D521ea3f3-7649-48c4-90b0-9a27807b7d67.webp&sig=PX0AHGQcFo6bGujbEDXd5QnaJO4kxGAoYM3wSpSVbaw%3D",
+    "surprised": "https://files.oaiusercontent.com/file-SdeEgzaLxhBdsVt5Z9biCa?se=2025-02-01T22%3A13%3A37Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3Dd2e7f340-f6fa-4814-a05c-ad7eb06fe1ed.webp&sig=CfjLfpDOz51IV943l0itsdhcifjRAnFuS4OMnipYoeE%3D",
+    "thoughtful": "https://files.oaiusercontent.com/file-6H4QBtLG8FSAnQyQeJ6HWK?se=2025-02-01T22%3A14%3A50Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D119632f8-b474-47aa-89c9-92893270bc56.webp&sig=3g/qhctKimvjXyBUFNnqDoo3m%2BFPY84Zfv21SdWEuhw%3D",
+    "flirtatious": "https://files.oaiusercontent.com/file-6F1XkFg3AEuLxMWmUxAJZX?se=2025-02-01T22%3A19%3A37Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D00e37d94-2783-4ae0-8804-54cfc8b72eb0.webp&sig=rpAKdoQ36u2pzSoTojB2Y%2BX7SXG7kLHGpD7Ip9MHrvY%3D"
+  },
+  "startNodeId": "greeting",
+  "nodes": {
+    "greeting": {
+      "id": "greeting",
+      "text": "Mmm, look who we have here. What do you want, little one?",
+      "speaker": "Petra",
+      "emotion": "default",
+      "choices": [
+        {
+          "id": "growth",
+          "text": "You look… different. Have you been getting bigger?",
+          "nextNodeId": "petra_growth",
+          "alternateDestinations": [
+            {
+              "nextNodeId": "petra_impressed",
+              "prerequisites": {
+                "stateConditions": [
+                  {
+                    "key": "player_weight",
+                    "operator": ">=",
+                    "value": 300
+                  }
+                ]
+              }
+            },
+            {
+              "nextNodeId": "petra_mocks",
+              "prerequisites": {
+                "stateConditions": [
+                  {
+                    "key": "player_weight",
+                    "operator": "<",
+                    "value": 200
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "jonas_status",
+          "text": "How's Jonas doing?",
+          "nextNodeId": "talk_about_jonas"
+        },
+        {
+          "id": "feeding_question",
+          "text": "Are you still making him bigger?",
+          "nextNodeId": "feeding_jonas"
+        },
+        {
+          "id": "admire_petra",
+          "text": "Just wanted to admire you.",
+          "nextNodeId": "petra_tease"
+        },
+        {
+          "id": "leave",
+          "text": "Never mind, I'll leave you to it.",
+          "nextNodeId": "farewell"
+        }
+      ]
+    },
+    "petra_growth": {
+      "id": "petra_growth",
+      "text": "Hahaha, you noticed, hmm? Of course I've been getting bigger. These tits? These hips? All extra, just for Jonas. You think you can handle a woman like me now?",
+      "speaker": "Petra",
+      "emotion": "happy",
+      "choices": [
+        {
+          "id": "compliment",
+          "text": "You looked perfect before, but now… wow.",
+          "nextNodeId": "petra_proud"
+        },
+        {
+          "id": "nervous",
+          "text": "I-I mean, I just meant… you changed…",
+          "nextNodeId": "petra_dominates"
+        },
+        {
+          "id": "jonas_love",
+          "text": "I bet Jonas loves it.",
+          "nextNodeId": "feeding_jonas"
+        },
+        {
+          "id": "exit",
+          "text": "I should go.",
+          "nextNodeId": "farewell"
+        }
+      ]
+    },
+    "talk_about_jonas": {
+      "id": "talk_about_jonas",
+      "text": "Jonas? Oh yeah, he's quite a character. He weighs {$$jonas_weight} pounds now. Always eating, always growing... just the way we like him.",
+      "alternateTexts": [
+        {
+          "text": "Jonas? He's gotten even bigger since you last saw him. {$$jonas_weight} pounds and still growing!",
+          "prerequisites": {
+            "requiredFlags": ["met_jonas_before"]
+          }
+        },
+        {
+          "text": "Jonas has slimmed down a bit lately, but {$$jonas_weight} pounds is still quite impressive.",
+          "prerequisites": {
+            "stateConditions": [
+              {
+                "key": "jonas_weight",
+                "operator": "<",
+                "value": 400
+              }
+            ]
+          }
+        }
+      ],
+      "speaker": "Petra",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "choice_1",
+          "text": "That's quite a weight! Has he always been that heavy?",
+          "nextNodeId": "jonas_history"
+        },
+        {
+          "id": "choice_2",
+          "text": "Maybe we should put him on a diet...",
+          "nextNodeId": "jonas_diet",
+          "stateChanges": [
+            {
+              "key": "jonas_weight",
+              "value": -10
+            }
+          ]
+        }
+      ]
+    },
+    "feeding_jonas": {
+      "id": "feeding_jonas",
+      "text": "Ohhh, you have to see it. He never stops eating now. He's always full, always being fed, always growing for us. And he loves it. If he could move, he'd be begging for more.",
+      "speaker": "Petra",
+      "emotion": "happy",
+      "choices": [
+        {
+          "id": "details",
+          "text": "You really mean always?",
+          "nextNodeId": "petra_details"
+        },
+        {
+          "id": "impressed",
+          "text": "That's… honestly impressive.",
+          "nextNodeId": "petra_proud"
+        },
+        {
+          "id": "concerned",
+          "text": "That's too much. You're going too far.",
+          "nextNodeId": "petra_dominates"
+        },
+        {
+          "id": "leave",
+          "text": "I need to go.",
+          "nextNodeId": "farewell"
+        }
+      ]
+    },
+    "petra_tease": {
+      "id": "petra_tease",
+      "text": "Mmm, so you just want to look at me? I don't blame you. This body? Made for worship. But don't get any ideas, little one. You aren't Jonas.",
+      "speaker": "Petra",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "humble",
+          "text": "I wouldn't dare compare myself to him.",
+          "nextNodeId": "petra_amused"
+        },
+        {
+          "id": "bold",
+          "text": "I can't help but admire… all of it.",
+          "nextNodeId": "petra_flirt",
+          "prerequisites": {
+            "stateConditions": [
+              {
+                "key": "player_weight",
+                "operator": ">=",
+                "value": 400
+              }
+            ]
+          }
+        },
+        {
+          "id": "exit",
+          "text": "I should go before I say something I regret.",
+          "nextNodeId": "farewell"
+        }
+      ]
+    },
+    "farewell": {
+      "id": "farewell",
+      "text": "Mmm, leaving so soon? Pity. But don't worry. I'll be here. Growing. And so will he.",
+      "speaker": "Petra",
+      "emotion": "sad",
+      "choices": []
+    },
+    "jonas_diet": {
+      "id": "jonas_diet",
+      "text": "You're right! After the diet, Jonas now weighs {$$jonas_weight} pounds. He's not too happy about it though!",
+      "speaker": "Petra",
+      "emotion": "sad",
+      "choices": [
+        {
+          "id": "choice_1",
+          "text": "Let's talk about something else.",
+          "nextNodeId": "greeting"
+        }
+      ]
+    },
+    "petra_proud": {
+      "id": "petra_proud",
+      "text": "Mmm, yes, you *see* now. I was already perfect, but now? Even *better*. My tits? *Massive.* My ass? *Outrageous.* Every curve, every extra pound, all *exactly* where it should be. When I walk? Everything *bounces*. When I sit? I take *up space*. And Jonas? Ohhh, he is *obsessed*. He *melts* when I press against him, when he feels just how *thick* I have become. You? Hahaha... you would not survive even a second under me.",
+      "speaker": "Petra",
+      "emotion": "happy",
+      "choices": [
+        {
+          "id": "choice_1738394516548",
+          "text": "Continue",
+          "nextNodeId": "greeting"
+        }
+      ]
+    },
+    "petra_dominates": {
+      "id": "petra_dominates",
+      "text": "Hahaha, of *course* I love it. And Jonas? Ohhh, he never stood a chance. He was strong at first, thought he could *resist*. But then he tasted my cooking. Then he felt me on top of him. Then Maike and I? We took turns making sure he was *completely ruined*. Every meal, every touch, every moment of pleasure... he just kept wanting *more*. Until one day? He could not stop. He *needed* us. Needed my food, needed my body, needed *everything* we gave him. Now? He is ours, and he *loves* it. And you? You are still so *small*. Maybe you learn one day.",
+      "speaker": "Petra",
+      "emotion": "happy",
+      "choices": [
+        {
+          "id": "choice_1738394622926",
+          "text": "Continue",
+          "nextNodeId": "greeting"
+        }
+      ]
+    },
+    "petra_details": {
+      "id": "petra_details",
+      "text": "Oh, you want details, hmm? You want to know how much? How often? Hahaha, it *never* stop. He wake up? He eat. He breathe? He eat. He full? We *make* space for more. He is always growing, always taking more. And we? We love it. He is ours, and he *knows* it.",
+      "speaker": "Petra",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "choice_1738394656825",
+          "text": "Continue",
+          "nextNodeId": "greeting"
+        }
+      ]
+    },
+    "petra_amused": {
+      "id": "petra_amused",
+      "text": "New dialogue node",
+      "speaker": "Petra",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "choice_1738394660835",
+          "text": "Continue",
+          "nextNodeId": "greeting"
+        }
+      ]
+    },
+    "petra_explains": {
+      "id": "petra_explains",
+      "text": "Ohhh, you do not *understand* yet? Jonas? He is *happiest* man alive. He do *nothing* but eat, rest, and be worshipped by us. Every moment, one of us is feeding him, making sure he grows. And when he is too full to move? That is when we take him. Mmm, he is *ours* in every way. No worries, no stress. Just pleasure, food, and endless softness. You *jealous* yet? Hahaha... I think maybe you are.",
+      "speaker": "Petra",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "choice_1738394665264",
+          "text": "Continue",
+          "nextNodeId": "greeting"
+        }
+      ]
+    },
+    "petra_laughs": {
+      "id": "petra_laughs",
+      "text": "New dialogue node",
+      "speaker": "Petra",
+      "emotion": "happy",
+      "choices": [
+        {
+          "id": "choice_1738394667311",
+          "text": "Continue",
+          "nextNodeId": "greeting"
+        }
+      ]
+    },
+    "petra_flirt": {
+      "id": "petra_flirt",
+      "text": "Mmm, look at *you* now. So soft, so heavy... finally, you start to look like someone worth my time. Maybe I *was* wrong about you, hmm? Maybe you could be... *fun*. Imagine it—me on your lap, feeling just how much you have *grown* for me. Or maybe I press against you, whisper in your ear, tell you what I *really* want. Hahaha... now, are you *brave* enough to find out?",
+      "speaker": "Petra",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "choice_1738394672571",
+          "text": "Continue",
+          "nextNodeId": "greeting"
+        }
+      ]
+    },
+    "petra_impressed": {
+      "id": "petra_impressed",
+      "text": "Look who's talking! You're quite the impressive size yourself. I see you've been taking good care of yourself...",
+      "speaker": "Petra",
+      "emotion": "happy",
+      "choices": [
+        {
+          "id": "share_tips",
+          "text": "Maybe we could share some weight gain tips?",
+          "nextNodeId": "petra_share_tips"
+        }
+      ]
+    },
+    "petra_mocks": {
+      "id": "petra_mocks",
+      "text": "Ha! That's rich coming from such a tiny thing. Come back when you've put on some proper weight yourself.",
+      "speaker": "Petra",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "embarrassed",
+          "text": "You're right, I should work on that...",
+          "nextNodeId": "petra_encourages"
+        }
+      ]
+    }
+  }
+}

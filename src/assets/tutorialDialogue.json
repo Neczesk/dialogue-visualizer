@@ -1,0 +1,144 @@
+{
+  "name": "Tutorial",
+  "character": "guide",
+  "characterName": "Guide",
+  "characterPicture": "/characters/guide/default.png",
+  "emotions": {
+    "default": "/characters/guide/default.png",
+    "happy": "/characters/guide/happy.png",
+    "excited": "/characters/guide/excited.png",
+    "thoughtful": "/characters/guide/thoughtful.png"
+  },
+  "startNodeId": "intro",
+  "nodes": {
+    "intro": {
+      "id": "intro",
+      "speaker": "Guide",
+      "text": "Welcome to the [color=blue]Dialogue Editor[/color]! I'll show you how everything works.",
+      "emotion": "excited",
+      "choices": [
+        {
+          "id": "choice_1",
+          "text": "Tell me about text formatting",
+          "nextNodeId": "formatting"
+        },
+        {
+          "id": "choice_2",
+          "text": "How do variables work?",
+          "nextNodeId": "variables"
+        },
+        {
+          "id": "choice_3",
+          "text": "Show me conditions and flags",
+          "nextNodeId": "conditions"
+        }
+      ]
+    },
+    "formatting": {
+      "id": "formatting",
+      "speaker": "Guide",
+      "text": "You can make text **bold**, _italic_, or ~~strikethrough~~. You can also add [color=red]colors[/color] to your text!",
+      "emotion": "happy",
+      "choices": [
+        {
+          "id": "choice_4",
+          "text": "That's cool! What else?",
+          "nextNodeId": "formatting2"
+        }
+      ]
+    },
+    "formatting2": {
+      "id": "formatting2",
+      "speaker": "Guide",
+      "text": "You can also change my [color=purple]emotion[/color] to match the dialogue's mood!",
+      "emotion": "excited",
+      "alternateTexts": [
+        {
+          "text": "Like now, where I'm being [color=blue]thoughtful[/color] about all the possibilities...",
+          "emotion": "thoughtful",
+          "prerequisites": {
+            "requiredFlags": ["seen_formatting"]
+          }
+        }
+      ],
+      "choices": [
+        {
+          "id": "choice_5",
+          "text": "Go back to start",
+          "nextNodeId": "intro",
+          "flagChanges": {
+            "add": ["seen_formatting"]
+          }
+        }
+      ]
+    },
+    "variables": {
+      "id": "variables",
+      "speaker": "Guide",
+      "text": "Variables let you show dynamic values! For example: You have {$$gold} gold coins.",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "choice_6",
+          "text": "Can I change these values?",
+          "nextNodeId": "variables2"
+        }
+      ]
+    },
+    "variables2": {
+      "id": "variables2",
+      "speaker": "Guide",
+      "text": "Yes! Try changing the values in the game state panel. Watch this text update: {$$gold} gold coins!",
+      "emotion": "excited",
+      "choices": [
+        {
+          "id": "choice_7",
+          "text": "Go back to start",
+          "nextNodeId": "intro",
+          "stateChanges": [
+            {
+              "key": "gold",
+              "operation": "add",
+              "value": 50
+            }
+          ]
+        }
+      ]
+    },
+    "conditions": {
+      "id": "conditions",
+      "speaker": "Guide",
+      "text": "Conditions let you control what choices appear based on flags and variables.",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "choice_8",
+          "text": "Show me a rich choice (Requires 100 gold)",
+          "nextNodeId": "conditions_rich",
+          "prerequisites": {
+            "stateConditions": [
+              {
+                "key": "gold",
+                "operator": ">=",
+                "value": 100
+              }
+            ]
+          }
+        },
+        {
+          "id": "choice_9",
+          "text": "Show me a flag-based choice",
+          "nextNodeId": "conditions_flag",
+          "prerequisites": {
+            "requiredFlags": ["seen_formatting"]
+          }
+        },
+        {
+          "id": "choice_10",
+          "text": "Go back to start",
+          "nextNodeId": "intro"
+        }
+      ]
+    }
+  }
+}

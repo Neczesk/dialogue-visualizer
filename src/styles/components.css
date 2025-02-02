@@ -1,0 +1,30 @@
+/* Shared component styles like buttons, inputs, etc. */
+.autocomplete-container {
+  position: relative;
+  width: 100%;
+}
+
+/* ... rest of component styles ... */
+
+.theme-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  box-shadow: var(--shadow-md);
+}
+
+.theme-toggle:hover {
+  background: var(--color-background-tertiary);
+}

@@ -1,0 +1,35 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+.App {
+  min-height: 100vh;
+  width: 100vw;
+  background-color: var(--color-background-secondary);
+  overflow-x: hidden;
+}
+
+.button,
+button {
+  padding: 8px 16px;
+  background-color: var(--color-primary);
+  color: var(--color-background);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.button:hover,
+button:hover {
+  background-color: var(--color-primary-hover);
+}

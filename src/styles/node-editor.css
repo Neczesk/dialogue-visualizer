@@ -1,0 +1,93 @@
+.node-editor-modal {
+  display: flex;
+  flex-direction: column;
+  height: 90vh;
+  width: 90vw;
+  max-width: 1200px;
+  background: var(--color-background);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.node-editor-content {
+  display: flex;
+  gap: 24px;
+  height: calc(100% - 120px);
+  overflow: hidden;
+}
+
+.node-editor-main {
+  flex: 3;
+  overflow-y: auto;
+  padding-right: 16px;
+}
+
+.node-editor-inspector {
+  flex: 2;
+  border-left: 1px solid var(--color-border-accent);
+  padding-left: 24px;
+  overflow-y: auto;
+}
+
+.node-editor-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-background);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+.node-editor-title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.node-editor-title h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.node-id {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-family: monospace;
+  background: var(--color-background-tertiary);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.node-editor-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: var(--color-background);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+
+.editor-section {
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.editor-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.editor-section-header h4 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* ... rest of node editor styles ... */
