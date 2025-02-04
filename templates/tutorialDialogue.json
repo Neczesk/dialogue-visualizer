@@ -434,6 +434,11 @@
           "id": "choice_paths_done",
           "text": "I understand paths now",
           "nextNodeId": "intro"
+        },
+        {
+          "id": "choice_exit_info",
+          "text": "What about ending conversations?",
+          "nextNodeId": "exit_info"
         }
       ]
     },
@@ -626,6 +631,28 @@
         {
           "id": "choice_editor_done",
           "text": "I understand the editor now",
+          "nextNodeId": "intro"
+        }
+      ]
+    },
+    "exit_info": {
+      "id": "exit_info",
+      "character": "guide",
+      "speaker": "Guide",
+      "text": "Choices can also end the conversation with an exit status! The game can use this status to decide what happens next, like opening a shop or starting a battle.",
+      "emotion": "thoughtful",
+      "choices": [
+        {
+          "id": "choice_exit_demo",
+          "text": "End conversation and open shop",
+          "nextNodeId": "",
+          "exit": {
+            "status": "shop"
+          }
+        },
+        {
+          "id": "choice_exit_back",
+          "text": "I understand exits",
           "nextNodeId": "intro"
         }
       ]
