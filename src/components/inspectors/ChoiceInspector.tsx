@@ -149,12 +149,43 @@ export const ChoiceInspector: React.FC<ChoiceInspectorProps> = ({
             <button
               onClick={() => handleNodeSelect(choice.nextNodeId)}
               className='quick-create-button'
-              disabled={!choice.nextNodeId || availableNodes.includes(choice.nextNodeId)}
+              disabled={!choice.nextNodeId || availableNodes.includes(choice.nextNodeId) || !!choice.exit}
             >
               Create Node
             </button>
           </div>
         </div>
+      </div>
+
+      <div className='form-group'>
+        <label>
+          <input
+            type='checkbox'
+            checked={!!choice.exit}
+            onChange={(e) => {
+              onUpdate({
+                ...choice,
+                exit: e.target.checked ? { status: '' } : undefined,
+                nextNodeId: e.target.checked ? '' : choice.nextNodeId,
+              });
+            }}
+          />
+          End conversation with status code
+        </label>
+        {choice.exit && (
+          <input
+            type='text'
+            value={choice.exit.status}
+            onChange={(e) => {
+              onUpdate({
+                ...choice,
+                exit: { status: e.target.value },
+              });
+            }}
+            placeholder='Enter status code...'
+            className='exit-status-input'
+          />
+        )}
       </div>
 
       <div className='prerequisites-section'>

@@ -34,9 +34,12 @@ export interface DialogueChoice {
   text: string;
   nextNodeId: string;
   prerequisites?: Prerequisites;
-  alternateDestinations?: AlternateDestination[];
   flagChanges?: FlagChanges;
   stateChanges?: StateChange[];
+  alternateDestinations?: AlternateDestination[];
+  exit?: {
+    status: string; // e.g., "continue", "shop", "battle", etc.
+  };
 }
 
 export interface DialogueTree {

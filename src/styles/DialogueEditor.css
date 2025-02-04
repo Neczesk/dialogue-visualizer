@@ -610,9 +610,49 @@ button:hover {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.choice-preview:hover {
-  border-color: var(--color-primary);
-  box-shadow: 0 2px 6px rgba(34, 170, 102, 0.1);
+.choice-preview-exit {
+  border-style: dashed;
+  border-width: 2px;
+  border-color: var(--color-warning);
+  background: var(--color-warning-light);
+}
+
+.dialogue-node-choice {
+  /* ... existing styles ... */
+}
+
+/* Exit choices - warning colors */
+.dialogue-node-choice.exit {
+  background-color: var(--color-warning-light);
+  border-color: var(--color-warning);
+  color: var(--color-warning-dark);
+}
+
+/* Broken choices (missing target) - error colors */
+.dialogue-node-choice.broken {
+  background-color: var(--color-error-light);
+  border-color: var(--color-error);
+  color: var(--color-error-dark);
+}
+
+/* When hovering over choices */
+.dialogue-node-choice.exit:hover {
+  background-color: var(--color-warning-light);
+  border-color: var(--color-warning-dark);
+}
+
+.dialogue-node-choice.broken:hover {
+  background-color: var(--color-error-light);
+  border-color: var(--color-error-dark);
+}
+
+/* Icons */
+.exit-icon {
+  color: var(--color-warning-dark);
+}
+
+.broken-icon {
+  color: var(--color-error-dark);
 }
 
 .choice-text {
@@ -791,6 +831,19 @@ button:hover {
 .add-condition-button:hover {
   background: var(--color-background-tertiary);
   border-color: var(--color-border-accent);
+}
+
+.dialogue-node-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.dialogue-node-id {
+  font-size: 0.8em;
+  color: var(--color-text-tertiary);
+  font-family: monospace;
 }
 
 .remove-condition-button {

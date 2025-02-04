@@ -37,3 +37,55 @@
 .theme-toggle:hover {
   background: var(--color-background-tertiary);
 }
+
+.button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.button.primary {
+  background-color: var(--color-primary);
+  color: var(--color-background);
+}
+
+.button.primary:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.button.secondary {
+  background-color: var(--color-background-tertiary);
+  color: var(--color-text);
+}
+
+.button.secondary:hover {
+  background-color: var(--color-background-secondary);
+}
+
+.button.danger {
+  background-color: var(--color-error);
+  color: var(--color-background);
+}
+
+.button.danger:hover {
+  background-color: var(--color-error-dark);
+}
+
+.button.small {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.button.large {
+  padding: 12px 24px;
+  font-size: 16px;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

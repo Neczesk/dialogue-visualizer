@@ -38,7 +38,7 @@ export const Inspector: React.FC<InspectorProps> = ({
         );
       case 'choice':
         return (
-          target.index && (
+          typeof target.index === 'number' && (
             <ChoiceInspector
               choice={node.choices[target.index]}
               onUpdate={(updatedChoice) => {

@@ -7,6 +7,7 @@ import { DialoguePreview } from './DialoguePreview';
 import { DialogueNodeEditor } from './DialogueNodeEditor';
 import { downloadAsGodotResource, downloadDialogueTreeScript } from '../utils/godotExporter';
 import { CharacterManager } from './CharacterManager';
+import { ReactFlowProvider } from 'reactflow';
 
 const STORAGE_KEY = 'dialogue_tree_data';
 const DEFAULT_PORTRAIT = import.meta.env.BASE_URL + 'characters/default/default.webp';
@@ -257,138 +258,140 @@ export const DialogueEditor: React.FC = () => {
 
   return (
     <div className='dialogue-editor'>
-      <div className='editor-header'>
-        <div className='editor-controls'>
-          <select
-            value={selectedTemplatePath}
-            onChange={(e) => setSelectedTemplatePath(e.target.value)}
-            className='template-select'
-          >
-            {templates.map((file) => (
-              <option
-                key={file.path}
-                value={file.path}
-              >
-                {file.name}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={loadSelectedTemplate}
-            className='template-button'
-          >
-            New from Template
-          </button>
-          <div className='editor-controls-divider' />
-          <div className='picture-edit-container'>
-            {isEditingPicture ? (
-              <input
-                type='text'
-                value={pictureUrl}
-                onChange={(e) => setPictureUrl(e.target.value)}
-                placeholder='Character picture URL...'
-                className='picture-url-input'
-              />
-            ) : (
-              <span className='current-picture'>
-                {dialogueTree?.characters?.default?.portraits?.default || 'No picture set'}
-              </span>
-            )}
-            <button
-              onClick={handlePictureEdit}
-              className='picture-edit-button'
+      <ReactFlowProvider>
+        <div className='editor-header'>
+          <div className='editor-controls'>
+            <select
+              value={selectedTemplatePath}
+              onChange={(e) => setSelectedTemplatePath(e.target.value)}
+              className='template-select'
             >
-              {isEditingPicture ? 'Save' : 'Edit Picture'}
+              {templates.map((file) => (
+                <option
+                  key={file.path}
+                  value={file.path}
+                >
+                  {file.name}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={loadSelectedTemplate}
+              className='template-button'
+            >
+              New from Template
+            </button>
+            <div className='editor-controls-divider' />
+            <div className='picture-edit-container'>
+              {isEditingPicture ? (
+                <input
+                  type='text'
+                  value={pictureUrl}
+                  onChange={(e) => setPictureUrl(e.target.value)}
+                  placeholder='Character picture URL...'
+                  className='picture-url-input'
+                />
+              ) : (
+                <span className='current-picture'>
+                  {dialogueTree?.characters?.default?.portraits?.default || 'No picture set'}
+                </span>
+              )}
+              <button
+                onClick={handlePictureEdit}
+                className='picture-edit-button'
+              >
+                {isEditingPicture ? 'Save' : 'Edit Picture'}
+              </button>
+            </div>
+            <div className='editor-controls-divider' />
+            <button
+              onClick={saveDialogueTree}
+              className='save-button'
+            >
+              Save
+            </button>
+            <input
+              type='file'
+              accept='.json,.tres'
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFileLoad(file);
+                // Reset the input so the same file can be loaded again
+                e.target.value = '';
+              }}
+              style={{ display: 'none' }}
+              id='load-file'
+            />
+            <label
+              htmlFor='load-file'
+              className='load-button'
+            >
+              Load
+            </label>
+            <button
+              onClick={() => setIsPreviewOpen(true)}
+              className='preview-button'
+            >
+              Preview
+            </button>
+            <button
+              onClick={() => downloadAsGodotResource(dialogueTree)}
+              className='export-button'
+            >
+              Export Resource
+            </button>
+            <button
+              onClick={downloadDialogueTreeScript}
+              className='export-button'
+            >
+              Export Script
+            </button>
+            <button
+              onClick={() => setIsCharacterManagerOpen(true)}
+              className='character-manager-button'
+            >
+              👥 Characters
             </button>
           </div>
-          <div className='editor-controls-divider' />
-          <button
-            onClick={saveDialogueTree}
-            className='save-button'
-          >
-            Save
-          </button>
-          <input
-            type='file'
-            accept='.json,.tres'
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleFileLoad(file);
-              // Reset the input so the same file can be loaded again
-              e.target.value = '';
-            }}
-            style={{ display: 'none' }}
-            id='load-file'
-          />
-          <label
-            htmlFor='load-file'
-            className='load-button'
-          >
-            Load
-          </label>
-          <button
-            onClick={() => setIsPreviewOpen(true)}
-            className='preview-button'
-          >
-            Preview
-          </button>
-          <button
-            onClick={() => downloadAsGodotResource(dialogueTree)}
-            className='export-button'
-          >
-            Export Resource
-          </button>
-          <button
-            onClick={downloadDialogueTreeScript}
-            className='export-button'
-          >
-            Export Script
-          </button>
-          <button
-            onClick={() => setIsCharacterManagerOpen(true)}
-            className='character-manager-button'
-          >
-            👥 Characters
-          </button>
         </div>
-      </div>
 
-      <div className='editor-content'>
-        <DialogueFlow
+        <div className='editor-content'>
+          <DialogueFlow
+            dialogueTree={dialogueTree}
+            onNodeSelect={handleNodeSelect}
+            onCreateNode={handleCreateNode}
+            onUpdate={(newTree) => {
+              console.log('DialogueEditor onUpdate called with:', newTree);
+              setDialogueTree(newTree);
+            }}
+          />
+        </div>
+
+        {selectedNode && (
+          <DialogueNodeEditor
+            node={selectedNode}
+            dialogueTree={dialogueTree}
+            isOpen={isNodeEditorOpen}
+            onClose={() => setIsNodeEditorOpen(false)}
+            onSave={handleNodeSave}
+            availableNodes={Object.keys(dialogueTree.nodes)}
+            onCreateNode={handleCreateNode}
+          />
+        )}
+
+        <DialoguePreview
           dialogueTree={dialogueTree}
-          onNodeSelect={handleNodeSelect}
-          onCreateNode={handleCreateNode}
-          onUpdate={(newTree) => {
-            console.log('DialogueEditor onUpdate called with:', newTree);
-            setDialogueTree(newTree);
-          }}
+          isOpen={isPreviewOpen}
+          onClose={() => setIsPreviewOpen(false)}
         />
-      </div>
 
-      {selectedNode && (
-        <DialogueNodeEditor
-          node={selectedNode}
+        <CharacterManager
           dialogueTree={dialogueTree}
-          isOpen={isNodeEditorOpen}
-          onClose={() => setIsNodeEditorOpen(false)}
-          onSave={handleNodeSave}
-          availableNodes={Object.keys(dialogueTree.nodes)}
-          onCreateNode={handleCreateNode}
+          isOpen={isCharacterManagerOpen}
+          onClose={() => setIsCharacterManagerOpen(false)}
+          onUpdate={setDialogueTree}
         />
-      )}
-
-      <DialoguePreview
-        dialogueTree={dialogueTree}
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
-      />
-
-      <CharacterManager
-        dialogueTree={dialogueTree}
-        isOpen={isCharacterManagerOpen}
-        onClose={() => setIsCharacterManagerOpen(false)}
-        onUpdate={setDialogueTree}
-      />
+      </ReactFlowProvider>
     </div>
   );
 };

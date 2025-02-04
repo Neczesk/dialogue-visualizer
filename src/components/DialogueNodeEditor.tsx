@@ -269,16 +269,19 @@ export const DialogueNodeEditor: React.FC<DialogueNodeEditorProps> = ({
               {editedNode.choices.map((choice, index) => (
                 <div
                   key={choice.id}
-                  className='choice-preview'
+                  className={`choice-preview ${choice.exit ? 'choice-preview-exit' : ''}`}
                   onClick={() => setInspectorTarget({ type: 'choice', id: choice.id, index })}
                 >
                   <div className='choice-text'>{choice.text}</div>
                   <div className='choice-meta'>
                     {choice.prerequisites && <span className='condition-badge'>⚡</span>}
                     {choice.flagChanges && <span className='flag-badge'>🚩</span>}
-                    {choice.stateChanges && choice.stateChanges.length > 0 && (
-                      <span className='state-badge'>📊</span>
-                    )}→ {choice.nextNodeId || '???'}
+                    {choice.stateChanges && choice.stateChanges.length > 0 && <span className='state-badge'>📊</span>}
+                    {choice.exit ? (
+                      <span className='exit-badge'>🚪 {choice.exit.status}</span>
+                    ) : (
+                      `→ ${choice.nextNodeId || '???'}`
+                    )}
                   </div>
                 </div>
               ))}

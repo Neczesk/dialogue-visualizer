@@ -11,24 +11,19 @@ import ReactFlow, {
   NodeChange,
   applyNodeChanges,
   MarkerType,
+  useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { DialogueNode, DialogueTree } from '../types/DialogueTypes';
+import { DialogueNode, DialogueTree, DialogueChoice } from '../types/DialogueTypes';
 import { DialogueNodeEditor } from './DialogueNodeEditor';
 import { BBCodeRenderer } from './BBCodeRenderer';
+import { Button } from './Button';
 
 interface DialogueNodeData {
   text: string;
   speaker: string;
   emotion?: string;
-  choices: Array<{
-    text: string;
-    isLocked?: boolean;
-    isBlockable?: boolean;
-    requiredFlags?: string[];
-    blockedFlags?: string[];
-    isBroken?: boolean;
-  }>;
+  choices: Array<DialogueChoice>;
 }
 
 interface DialogueFlowProps {
@@ -42,8 +37,9 @@ type ConnectedNodes = Set<string>;
 
 const DialogueNodeComponent: React.FC<{
   data: DialogueNodeData;
+  id: string;
   style?: React.CSSProperties;
-}> = ({ data, style }) => {
+}> = ({ data, id, style }) => {
   return (
     <div
       className='dialogue-node'
@@ -53,39 +49,54 @@ const DialogueNodeComponent: React.FC<{
         type='target'
         position={Position.Left}
       />
-      <div className='dialogue-node-speaker'>
-        {data.speaker}
-        {data.emotion && <span className='dialogue-node-emotion'>• {data.emotion}</span>}
+      <div className='dialogue-node-header'>
+        <div className='dialogue-node-speaker'>
+          {data.speaker}
+          {data.emotion && <span className='dialogue-node-emotion'>• {data.emotion}</span>}
+        </div>
+        <div className='dialogue-node-id'>{id}</div>
       </div>
       <div className='dialogue-node-text'>
         <BBCodeRenderer text={data.text} />
       </div>
       <div className='dialogue-node-choices'>
         <div className='dialogue-node-choices-label'>Player options:</div>
-        {data.choices.map((choice, index) => (
-          <div
-            key={index}
-            className={`dialogue-node-choice ${choice.isLocked ? 'locked' : ''} ${
-              choice.isBlockable ? 'blockable' : ''
-            } ${choice.isBroken ? 'broken' : ''}`}
-            title={
-              choice.isBroken
-                ? 'Missing target node!'
-                : choice.isLocked
-                ? `Required: ${choice.requiredFlags?.join(', ')}${
-                    choice.blockedFlags ? `\nBlocked by: ${choice.blockedFlags.join(', ')}` : ''
-                  }`
-                : choice.isBlockable
-                ? `Can be blocked by: ${choice.blockedFlags?.join(', ')}`
-                : ''
-            }
-          >
-            • {choice.text}
-            {choice.isLocked && <span className='lock-icon'>🔒</span>}
-            {choice.isBlockable && <span className='block-icon'>⚠️</span>}
-            {choice.isBroken && <span className='broken-icon'>⚡</span>}
-          </div>
-        ))}
+        {data.choices.map((choice, index) => {
+          const isLocked =
+            !!choice.prerequisites?.requiredFlags?.length || !!choice.prerequisites?.stateConditions?.length;
+          const isBlockable = !!choice.prerequisites?.blockedFlags?.length;
+          const isBroken = !choice.nextNodeId && !choice.exit;
+
+          const tooltipText = choice.exit
+            ? `Exit: ${choice.exit.status}`
+            : isBroken
+            ? 'Missing target node!'
+            : isLocked
+            ? `Required: ${choice.prerequisites?.requiredFlags?.join(', ')}${
+                choice.prerequisites?.blockedFlags
+                  ? `\nBlocked by: ${choice.prerequisites.blockedFlags.join(', ')}`
+                  : ''
+              }`
+            : isBlockable
+            ? `Can be blocked by: ${choice.prerequisites?.blockedFlags?.join(', ')}`
+            : '';
+
+          return (
+            <div
+              key={index}
+              className={`dialogue-node-choice ${isLocked ? 'locked' : ''} ${isBlockable ? 'blockable' : ''} ${
+                choice.exit ? 'exit' : ''
+              } ${isBroken ? 'broken' : ''}`}
+              title={tooltipText}
+            >
+              • {choice.text}
+              {isLocked && <span className='lock-icon'>🔒</span>}
+              {isBlockable && <span className='block-icon'>⚠️</span>}
+              {isBroken && <span className='broken-icon'>⚡</span>}
+              {choice.exit && <span className='exit-icon'>🚪</span>}
+            </div>
+          );
+        })}
       </div>
       <Handle
         type='source'
@@ -128,6 +139,8 @@ export const DialogueFlow: React.FC<DialogueFlowProps> = ({ dialogueTree, onCrea
   const HORIZONTAL_SPACING = 400;
   const VERTICAL_SPACING = 200;
   const NODE_MARGIN = 50; // Extra margin for visual spacing
+
+  const { fitView } = useReactFlow();
 
   const initializeGraph = useCallback(() => {
     const newNodes: Node[] = [];
@@ -238,13 +251,9 @@ export const DialogueFlow: React.FC<DialogueFlowProps> = ({ dialogueTree, onCrea
           speaker: node.speaker,
           emotion: node.emotion,
           choices: node.choices.map((choice) => ({
-            text: choice.text,
-            isLocked: choice.prerequisites?.requiredFlags !== undefined,
-            isBlockable:
-              choice.prerequisites?.blockedFlags !== undefined && choice.prerequisites?.requiredFlags === undefined,
-            requiredFlags: choice.prerequisites?.requiredFlags,
-            blockedFlags: choice.prerequisites?.blockedFlags,
-            isBroken: !dialogueTree.nodes[choice.nextNodeId],
+            ...choice,
+            prerequisites: choice.prerequisites,
+            exit: choice.exit,
           })),
         },
         style: {
@@ -262,7 +271,7 @@ export const DialogueFlow: React.FC<DialogueFlowProps> = ({ dialogueTree, onCrea
 
         // Common edge styles
         const baseEdgeStyle = {
-          type: 'bezier' as const,
+          type: 'smoothstep' as const,
           sourceHandle: Position.Right,
           targetHandle: Position.Left,
           labelStyle: {
@@ -328,8 +337,70 @@ export const DialogueFlow: React.FC<DialogueFlowProps> = ({ dialogueTree, onCrea
       });
     });
 
-    setNodes(newNodes);
-    setEdges(newEdges);
+    // Move createExitNodes inside here
+    const createExitNodes = (nodes: DialogueNode[]) => {
+      const exitNodes: Node[] = [];
+      const exitEdges: Edge[] = [];
+
+      // Find the rightmost x position of all nodes
+      const rightmostX = Math.max(
+        ...nodes.map((node) => {
+          const position = nodePositions.get(node.id);
+          return position ? position.x : 0;
+        })
+      );
+
+      // Place exit nodes to the right with vertical spacing
+      let currentY = 0;
+      const EXIT_SPACING = 150;
+      const EXIT_X_OFFSET = 400;
+
+      nodes.forEach((node) => {
+        node.choices.forEach((choice) => {
+          if (choice.exit) {
+            const exitNodeId = `exit_${choice.exit.status}`;
+
+            if (!exitNodes.find((n) => n.id === exitNodeId)) {
+              exitNodes.push({
+                id: exitNodeId,
+                type: 'exit',
+                data: { label: `Exit: ${choice.exit.status}` },
+                position: {
+                  x: rightmostX + EXIT_X_OFFSET,
+                  y: currentY,
+                },
+                style: {
+                  background: 'var(--color-error-light)',
+                  border: '2px solid var(--color-error)',
+                  borderRadius: '8px',
+                  padding: '10px',
+                },
+              });
+              currentY += EXIT_SPACING;
+            }
+
+            exitEdges.push({
+              id: `${node.id}-${exitNodeId}`,
+              source: node.id,
+              target: exitNodeId,
+              label: choice.text,
+              type: 'exit',
+              style: {
+                stroke: '#ff6666',
+              },
+            });
+          }
+        });
+      });
+
+      return { exitNodes, exitEdges };
+    };
+
+    // Add exit nodes and edges
+    const { exitNodes, exitEdges } = createExitNodes(Object.values(dialogueTree.nodes));
+
+    setNodes([...newNodes, ...exitNodes]);
+    setEdges([...newEdges, ...exitEdges]);
   }, [dialogueTree]);
 
   // Initialize on mount or when dialogueTree changes
@@ -458,9 +529,92 @@ export const DialogueFlow: React.FC<DialogueFlowProps> = ({ dialogueTree, onCrea
     setSelectedNodeId(null);
   }, []);
 
+  const arrangeNodes = useCallback(() => {
+    if (!dialogueTree) return;
+
+    const HORIZONTAL_SPACING = 300;
+    const VERTICAL_SPACING = 150;
+    const START_X = 50; // Initial x offset
+    const START_Y = 100; // Initial y offset
+
+    // Build a map of node depths (distance from start node)
+    const nodeDepths = new Map<string, number>();
+    const visited = new Set<string>();
+
+    const calculateDepth = (nodeId: string, depth: number) => {
+      if (visited.has(nodeId)) return;
+      visited.add(nodeId);
+      nodeDepths.set(nodeId, Math.max(nodeDepths.get(nodeId) || 0, depth));
+
+      const node = dialogueTree.nodes[nodeId];
+      if (!node) return;
+
+      node.choices.forEach((choice) => {
+        if (choice.nextNodeId) {
+          calculateDepth(choice.nextNodeId, depth + 1);
+        }
+        choice.alternateDestinations?.forEach((alt) => {
+          if (alt.nextNodeId) {
+            calculateDepth(alt.nextNodeId, depth + 1);
+          }
+        });
+      });
+    };
+
+    // Start from the root node
+    calculateDepth(dialogueTree.startNodeId, 0);
+
+    // Group nodes by depth
+    const nodesByDepth = new Map<number, string[]>();
+    nodeDepths.forEach((depth, nodeId) => {
+      if (!nodesByDepth.has(depth)) {
+        nodesByDepth.set(depth, []);
+      }
+      nodesByDepth.get(depth)?.push(nodeId);
+    });
+
+    // Position nodes
+    const newNodes = [...nodes];
+    nodesByDepth.forEach((nodesAtDepth, depth) => {
+      const totalHeight = (nodesAtDepth.length - 1) * VERTICAL_SPACING;
+
+      nodesAtDepth.forEach((nodeId, index) => {
+        const node = newNodes.find((n) => n.id === nodeId);
+        if (node) {
+          node.position = {
+            x: START_X + depth * HORIZONTAL_SPACING,
+            y: START_Y + index * VERTICAL_SPACING - totalHeight / 2,
+          };
+        }
+      });
+    });
+
+    // Position exit nodes to the right of the deepest nodes
+    const maxDepth = Math.max(...nodesByDepth.keys(), 0);
+    const exitNodes = newNodes.filter((node) => node.type === 'exit');
+    const totalExitHeight = (exitNodes.length - 1) * VERTICAL_SPACING;
+
+    exitNodes.forEach((node, index) => {
+      node.position = {
+        x: START_X + (maxDepth + 1) * HORIZONTAL_SPACING,
+        y: START_Y + index * VERTICAL_SPACING - totalExitHeight / 2,
+      };
+    });
+
+    setNodes(newNodes);
+
+    // Center the view after arranging
+    setTimeout(() => {
+      fitView({ padding: 0.2 });
+    }, 100);
+  }, [dialogueTree, nodes]);
+
   return (
     <>
-      <div style={{ height: 'calc(100vh - 160px)', width: '100%' }}>
+      <div style={{ height: 'calc(100vh - 160px)', width: '100%', position: 'relative' }}>
+        <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1 }}>
+          <Button onClick={arrangeNodes}>Arrange Nodes</Button>
+        </div>
         <ReactFlow
           nodes={nodesWithOpacity}
           edges={edgesWithOpacity}
