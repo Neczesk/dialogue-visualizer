@@ -5,7 +5,7 @@ import { TextInput } from '../TextInput';
 
 interface ChoiceInspectorProps {
   choice: DialogueChoice;
-  onUpdate: (choice: DialogueChoice) => void;
+  onUpdate: (updatedChoice: DialogueChoice) => void;
   availableNodes: string[];
   onCreateNode?: (id: string) => void;
   existingFlags: string[];
@@ -17,9 +17,26 @@ export const ChoiceInspector: React.FC<ChoiceInspectorProps> = ({
   onUpdate,
   availableNodes,
   onCreateNode,
-  existingFlags = [],
-  existingStateKeys = [],
+  existingFlags,
+  existingStateKeys,
 }) => {
+  const [addFlagInput, setAddFlagInput] = React.useState('');
+  const [removeFlagInput, setRemoveFlagInput] = React.useState('');
+
+  const handleTextChange = (text: string) => {
+    onUpdate({
+      ...choice,
+      text,
+    });
+  };
+
+  const handleNextNodeChange = (nextNodeId: string) => {
+    onUpdate({
+      ...choice,
+      nextNodeId,
+    });
+  };
+
   const handleNodeSelect = (nodeId: string, isAlternate: boolean = false, alternateIndex?: number) => {
     if (!nodeId) return;
 
@@ -58,6 +75,52 @@ export const ChoiceInspector: React.FC<ChoiceInspectorProps> = ({
     });
   };
 
+  const handleStateChange = (index: number, field: string, value: unknown) => {
+    // Create a new array if it doesn't exist
+    const stateChanges = [...(choice.stateChanges || [])];
+
+    // Ensure the state change object exists at this index
+    while (stateChanges.length <= index) {
+      stateChanges.push({ key: '', value: 0 });
+    }
+
+    // Create a new object for this state change
+    stateChanges[index] = {
+      ...stateChanges[index],
+      [field]: value,
+    };
+
+    console.log('Updating state changes:', stateChanges); // Debug log
+
+    // Create entirely new choice object
+    const updatedChoice = {
+      ...choice,
+      stateChanges: stateChanges,
+    };
+
+    onUpdate(updatedChoice);
+  };
+
+  const handleFlagChange = (type: 'add' | 'remove', flags: string[]) => {
+    if (!onUpdate) return;
+    const newFlagChanges = { ...choice.flagChanges, [type]: flags };
+    onUpdate({ ...choice, flagChanges: newFlagChanges });
+  };
+
+  const handleAddFlag = (flag: string) => {
+    if (!flag) return;
+    const current = choice.flagChanges?.add || [];
+    handleFlagChange('add', [...current, flag]);
+    setAddFlagInput(''); // Clear input after adding
+  };
+
+  const handleRemoveFlag = (flag: string) => {
+    if (!flag) return;
+    const current = choice.flagChanges?.remove || [];
+    handleFlagChange('remove', [...current, flag]);
+    setRemoveFlagInput(''); // Clear input after adding
+  };
+
   return (
     <div className='inspector-content'>
       <h3 className='inspector-title'>Choice Settings</h3>
@@ -66,7 +129,7 @@ export const ChoiceInspector: React.FC<ChoiceInspectorProps> = ({
         <label>Text:</label>
         <TextInput
           value={choice.text}
-          onChange={(text) => onUpdate({ ...choice, text })}
+          onChange={handleTextChange}
           placeholder='Enter choice text...'
           className='choice-text-input'
         />
@@ -78,7 +141,7 @@ export const ChoiceInspector: React.FC<ChoiceInspectorProps> = ({
           <div className='node-id-input'>
             <AutocompleteInput
               value={choice.nextNodeId}
-              onChange={(value) => onUpdate({ ...choice, nextNodeId: value })}
+              onChange={handleNextNodeChange}
               onEnter={(value) => handleNodeSelect(value)}
               suggestions={availableNodes}
               placeholder='Select or create node...'
@@ -475,6 +538,131 @@ export const ChoiceInspector: React.FC<ChoiceInspectorProps> = ({
             </div>
           </div>
         ))}
+      </div>
+
+      <div className='effects-section'>
+        <h4>Effects</h4>
+
+        <div className='state-changes'>
+          <h5>State Changes</h5>
+          {(choice.stateChanges || []).map((change, index) => (
+            <div
+              key={index}
+              className='state-change-row'
+            >
+              <AutocompleteInput
+                value={change.key || ''}
+                onChange={(value) => handleStateChange(index, 'key', value)}
+                suggestions={existingStateKeys}
+                placeholder='State key...'
+              />
+              <select
+                value={change.operation || 'set'}
+                onChange={(e) => handleStateChange(index, 'operation', e.target.value)}
+              >
+                <option value='set'>Set</option>
+                <option value='add'>Add</option>
+                <option value='subtract'>Subtract</option>
+              </select>
+              <input
+                type='number'
+                value={change.value || 0}
+                onChange={(e) => handleStateChange(index, 'value', Number(e.target.value))}
+                placeholder='Value'
+              />
+              <button
+                onClick={() => {
+                  const newStateChanges = choice.stateChanges?.filter((_, i) => i !== index) || [];
+                  onUpdate({
+                    ...choice,
+                    stateChanges: newStateChanges,
+                  });
+                }}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={() => {
+              const stateChanges = [...(choice.stateChanges || [])];
+              stateChanges.push({ key: '', value: 0, operation: 'set' });
+              onUpdate({
+                ...choice,
+                stateChanges: stateChanges,
+              });
+            }}
+            className='add-state-change-button'
+          >
+            Add State Change
+          </button>
+        </div>
+
+        <div className='flag-changes'>
+          <h5>Flag Changes</h5>
+          <div className='flag-section'>
+            <label>Add Flags:</label>
+            <AutocompleteInput
+              value={addFlagInput}
+              onChange={setAddFlagInput}
+              onEnter={handleAddFlag}
+              suggestions={existingFlags}
+              placeholder='Add flags... (press Enter)'
+            />
+            <div className='flag-chips'>
+              {(choice.flagChanges?.add || []).map((flag) => (
+                <div
+                  key={flag}
+                  className='flag-chip'
+                >
+                  {flag}
+                  <button
+                    onClick={() => {
+                      const current = choice.flagChanges?.add || [];
+                      handleFlagChange(
+                        'add',
+                        current.filter((f) => f !== flag)
+                      );
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className='flag-section'>
+            <label>Remove Flags:</label>
+            <AutocompleteInput
+              value={removeFlagInput}
+              onChange={setRemoveFlagInput}
+              onEnter={handleRemoveFlag}
+              suggestions={existingFlags}
+              placeholder='Remove flags... (press Enter)'
+            />
+            <div className='flag-chips'>
+              {(choice.flagChanges?.remove || []).map((flag) => (
+                <div
+                  key={flag}
+                  className='flag-chip'
+                >
+                  {flag}
+                  <button
+                    onClick={() => {
+                      const current = choice.flagChanges?.remove || [];
+                      handleFlagChange(
+                        'remove',
+                        current.filter((f) => f !== flag)
+                      );
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -60,18 +60,18 @@ func get_next_node_id(choice: Dictionary, game_flags: Array = [], game_state: Di
 
 # Helper to check prerequisites
 func check_prerequisites(prereqs: Dictionary, game_flags: Array, game_state: Dictionary) -> bool:
-    if prereqs.has("requiredFlags"):
-        for flag in prereqs.requiredFlags:
+    if prereqs.has("required_flags"):
+        for flag in prereqs.required_flags:
             if not flag in game_flags:
                 return false
     
-    if prereqs.has("blockedFlags"):
-        for flag in prereqs.blockedFlags:
+    if prereqs.has("blocked_flags"):
+        for flag in prereqs.blocked_flags:
             if flag in game_flags:
                 return false
     
-    if prereqs.has("stateConditions"):
-        for condition in prereqs.stateConditions:
+    if prereqs.has("state_conditions"):
+        for condition in prereqs.state_conditions:
             var value = game_state.get(condition.key, 0)
             match condition.operator:
                 "=": if value != condition.value: return false
@@ -89,17 +89,17 @@ func apply_choice_changes(choice: Dictionary, game_flags: Array, game_state: Dic
         "state": game_state.duplicate()
     }
     
-    if choice.has("flagChanges"):
-        if choice.flagChanges.has("add"):
-            for flag in choice.flagChanges.add:
+    if choice.has("flag_changes"):
+        if choice.flag_changes.has("add"):
+            for flag in choice.flag_changes.add:
                 if not flag in result.flags:
                     result.flags.append(flag)
-        if choice.flagChanges.has("remove"):
-            for flag in choice.flagChanges.remove:
+        if choice.flag_changes.has("remove"):
+            for flag in choice.flag_changes.remove:
                 result.flags.erase(flag)
     
-    if choice.has("stateChanges"):
-        for change in choice.stateChanges:
+    if choice.has("state_changes"):
+        for change in choice.state_changes:
             var current = result.state.get(change.key, 0)
             match change.get("operation", "set"):
                 "add": result.state[change.key] = current + change.value

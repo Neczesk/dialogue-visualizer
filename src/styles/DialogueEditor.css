@@ -316,8 +316,6 @@ button:hover {
   overflow: hidden;
 }
 
-
-
 .dialogue-container {
   flex: 1;
   display: flex;
@@ -667,6 +665,7 @@ button:hover {
   color: var(--color-text);
   background: var(--color-background);
   transition: all 0.2s;
+  margin-bottom: 0px;
 }
 
 .form-group input:focus,
@@ -747,22 +746,18 @@ button:hover {
   gap: 8px;
   margin-bottom: 8px;
   align-items: center;
+  justify-content: center;
+  flex-direction: row;
 }
 
-.state-condition input {
+.state-condition input[type='number'] {
   padding: 6px 10px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   font-size: 13px;
   color: var(--color-text);
-}
-
-.state-condition input[type='text'] {
-  width: 120px;
-}
-
-.state-condition input[type='number'] {
-  width: 80px;
+  height: 100%;
+  margin-bottom: 0px;
 }
 
 .state-condition select {
@@ -776,10 +771,10 @@ button:hover {
 }
 
 .state-condition .operator-select {
-  padding: 0px 0px 0px 0px;
   border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 13px;
+  min-width: 75px;
 }
 .add-condition-button {
   background: var(--color-background-tertiary);
@@ -790,6 +785,7 @@ button:hover {
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
+  margin-bottom: 8px;
 }
 
 .add-condition-button:hover {
@@ -1017,7 +1013,7 @@ button:hover {
   gap: 8px;
 }
 
-.flag-input-container .autocomplete-input {
+.flag-input-container {
   flex: 1;
 }
 
@@ -1125,15 +1121,6 @@ button:hover {
 .autocomplete-container {
   position: relative;
   width: 100%;
-}
-
-.autocomplete-input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  color: var(--color-text);
 }
 
 .suggestions-list {

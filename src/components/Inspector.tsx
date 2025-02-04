@@ -8,11 +8,11 @@ import { AlternateTextInspector } from './inspectors/AlternateTextInspector';
 interface InspectorProps {
   target: InspectorTarget;
   node: DialogueNode;
-  onUpdate: (node: DialogueNode) => void;
+  onUpdate: (updatedNode: DialogueNode) => void;
   availableNodes: string[];
   onCreateNode?: (id: string) => void;
-  existingFlags?: string[];
-  existingStateKeys?: string[];
+  existingFlags: string[];
+  existingStateKeys: string[];
 }
 
 export const Inspector: React.FC<InspectorProps> = ({
@@ -38,19 +38,22 @@ export const Inspector: React.FC<InspectorProps> = ({
         );
       case 'choice':
         return (
-          <ChoiceInspector
-            choice={node.choices[target.index!]}
-            onUpdate={(updatedChoice) =>
-              onUpdate({
-                ...node,
-                choices: node.choices.map((c, i) => (i === target.index ? updatedChoice : c)),
-              })
-            }
-            availableNodes={availableNodes}
-            onCreateNode={onCreateNode}
-            existingFlags={existingFlags!}
-            existingStateKeys={existingStateKeys!}
-          />
+          target.index && (
+            <ChoiceInspector
+              choice={node.choices[target.index]}
+              onUpdate={(updatedChoice) => {
+                const updatedNode = {
+                  ...node,
+                  choices: node.choices.map((choice, i) => (i === target.index ? updatedChoice : choice)),
+                };
+                onUpdate(updatedNode);
+              }}
+              availableNodes={availableNodes}
+              onCreateNode={onCreateNode}
+              existingFlags={existingFlags}
+              existingStateKeys={existingStateKeys}
+            />
+          )
         );
       case 'alternateText':
         return (

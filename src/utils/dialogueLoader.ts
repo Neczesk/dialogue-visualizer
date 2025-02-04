@@ -1,7 +1,6 @@
 import { DialogueTree } from '../types/DialogueTypes';
 
 // Import all dialogue files from assets folder
-const dialogueFiles = import.meta.glob('../assets/*.json', { eager: true });
 
 export interface DialogueFile {
   name: string;
@@ -9,18 +8,15 @@ export interface DialogueFile {
   content: DialogueTree;
 }
 
-const formatTitle = (filename: string): string => {
-  return filename
-    .replace('.json', '')
-    .split(/[-_]/)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-};
-
-export const getDialogueFiles = (): DialogueFile[] => {
-  return Object.entries(dialogueFiles).map(([path, module]) => ({
-    name: formatTitle(path.split('/').pop() || ''),
-    path,
-    content: module as DialogueTree,
-  }));
-};
+export const getDialogueFiles = (): DialogueFile[] => [
+  {
+    name: 'Tutorial',
+    path: import.meta.env.BASE_URL + 'templates/tutorialDialogue.json',
+    content: {
+      name: '',
+      characters: {},
+      startNodeId: '',
+      nodes: {},
+    },
+  },
+];

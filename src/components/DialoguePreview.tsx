@@ -3,6 +3,8 @@ import { DialogueTree, DialogueChoice, StateCondition, DialogueNode } from '../t
 import { replaceVariables, extractVariables } from '../utils/textParser';
 import { BBCodeRenderer } from './BBCodeRenderer';
 
+const DEFAULT_PORTRAIT = import.meta.env.BASE_URL + 'characters/default/default.webp';
+
 interface Message {
   text: string;
   originalText?: string;
@@ -16,80 +18,6 @@ interface DialoguePreviewProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-// Add these helper functions at the top
-const getCharacterPortrait = (
-  node: DialogueNode | undefined,
-  characters: DialogueTree['characters']
-): string | undefined => {
-  if (!node?.character) return undefined;
-  const character = characters[node.character];
-  if (!character?.portraits) return undefined;
-
-  if (node.emotion && character.portraits[node.emotion]) {
-    return character.portraits[node.emotion];
-  }
-  return character.portraits[character.defaultEmotion];
-};
-
-const isChoiceAvailable = (
-  choice: DialogueChoice,
-  gameFlags: Set<string>,
-  gameState: Record<string, number>
-): boolean => {
-  if (!choice.prerequisites) return true;
-
-  const { requiredFlags, blockedFlags, stateConditions } = choice.prerequisites;
-
-  // Check required flags
-  if (requiredFlags?.some((flag) => !gameFlags.has(flag))) return false;
-
-  // Check blocked flags
-  if (blockedFlags?.some((flag) => gameFlags.has(flag))) return false;
-
-  // Check state conditions
-  if (stateConditions?.some((condition) => !checkStateCondition(condition, gameState))) return false;
-
-  return true;
-};
-
-const checkStateCondition = (condition: StateCondition, gameState: Record<string, number>): boolean => {
-  const value = gameState[condition.key] ?? 0;
-  switch (condition.operator) {
-    case '=':
-      return value === condition.value;
-    case '>':
-      return value > condition.value;
-    case '<':
-      return value < condition.value;
-    case '>=':
-      return value >= condition.value;
-    case '<=':
-      return value <= condition.value;
-    default:
-      return false;
-  }
-};
-
-const getChoiceTooltip = (choice: DialogueChoice, gameFlags: Set<string>): string => {
-  if (!choice.prerequisites) return '';
-  const { requiredFlags, blockedFlags, stateConditions } = choice.prerequisites;
-  const reasons: string[] = [];
-
-  if (requiredFlags?.some((flag) => !gameFlags.has(flag))) {
-    reasons.push(`Required flags: ${requiredFlags.join(', ')}`);
-  }
-
-  if (blockedFlags?.some((flag) => gameFlags.has(flag))) {
-    reasons.push(`Blocked by flags: ${blockedFlags.join(', ')}`);
-  }
-
-  if (stateConditions?.length) {
-    reasons.push(`State conditions not met`);
-  }
-
-  return reasons.join('\n');
-};
 
 export const DialoguePreview: React.FC<DialoguePreviewProps> = ({ dialogueTree, isOpen, onClose }) => {
   const [currentNodeId, setCurrentNodeId] = useState(dialogueTree.startNodeId);
@@ -269,12 +197,55 @@ export const DialoguePreview: React.FC<DialoguePreviewProps> = ({ dialogueTree, 
     }
   }, [isOpen, dialogueTree, resetConversation]);
 
+  const getCharacterPortrait = (character: string | undefined, emotion: string | undefined): string => {
+    if (!character || !emotion || !dialogueTree.characters[character]) {
+      return DEFAULT_PORTRAIT;
+    }
+
+    const portraits = dialogueTree.characters[character].portraits;
+    const portraitPath = portraits[emotion] || portraits[dialogueTree.characters[character].defaultEmotion];
+
+    // Check if we have a valid portrait path
+    if (!portraitPath) {
+      return DEFAULT_PORTRAIT;
+    }
+
+    // Handle Godot-style paths
+    if (portraitPath.startsWith('res://') || !portraitPath.startsWith('/characters/')) {
+      return 'Godot Image Path';
+    }
+
+    // Handle our web-style paths
+    try {
+      return import.meta.env.BASE_URL + portraitPath.replace(/^\//, '');
+    } catch {
+      return DEFAULT_PORTRAIT;
+    }
+  };
+
   const currentNode = dialogueTree?.nodes[currentNodeId];
-  const portraitUrl = getCharacterPortrait(currentNode, dialogueTree?.characters || {});
+  const portraitUrl = getCharacterPortrait(currentNode?.character, currentNode?.emotion);
 
   const handleChoice = (choice: DialogueChoice) => {
-    const nextNode = dialogueTree.nodes[choice.nextNodeId];
-    if (!nextNode) return;
+    // Determine next node based on alternate destinations
+    let nextNodeId = choice.nextNodeId;
+    if (choice.alternateDestinations) {
+      for (const alt of choice.alternateDestinations) {
+        if (
+          alt.prerequisites &&
+          isChoiceAvailable({ prerequisites: alt.prerequisites } as DialogueChoice, gameFlags, gameState)
+        ) {
+          nextNodeId = alt.nextNodeId;
+          break;
+        }
+      }
+    }
+
+    const nextNode = dialogueTree.nodes[nextNodeId];
+    if (!nextNode) {
+      console.error('Next node not found:', nextNodeId);
+      return;
+    }
 
     // Apply flag changes
     if (choice.flagChanges) {
@@ -292,12 +263,15 @@ export const DialoguePreview: React.FC<DialoguePreviewProps> = ({ dialogueTree, 
         const next = { ...prev };
         choice.stateChanges?.forEach((change) => {
           const currentValue = next[change.key] ?? 0;
-          if (change.operation === 'add') {
-            next[change.key] = currentValue + change.value;
-          } else if (change.operation === 'subtract') {
-            next[change.key] = currentValue - change.value;
-          } else {
-            next[change.key] = change.value;
+          switch (change.operation) {
+            case 'add':
+              next[change.key] = currentValue + change.value;
+              break;
+            case 'subtract':
+              next[change.key] = currentValue - change.value;
+              break;
+            default:
+              next[change.key] = change.value;
           }
         });
         return next;
@@ -322,7 +296,66 @@ export const DialoguePreview: React.FC<DialoguePreviewProps> = ({ dialogueTree, 
     ]);
 
     // Update current node
-    setCurrentNodeId(choice.nextNodeId);
+    setCurrentNodeId(nextNodeId);
+  };
+
+  const isChoiceAvailable = (
+    choice: DialogueChoice,
+    gameFlags: Set<string>,
+    gameState: Record<string, number>
+  ): boolean => {
+    if (!choice.prerequisites) return true;
+
+    const { requiredFlags, blockedFlags, stateConditions } = choice.prerequisites;
+
+    // Check required flags
+    if (requiredFlags?.some((flag) => !gameFlags.has(flag))) return false;
+
+    // Check blocked flags
+    if (blockedFlags?.some((flag) => gameFlags.has(flag))) return false;
+
+    // Check state conditions
+    if (stateConditions?.some((condition) => !checkStateCondition(condition, gameState))) return false;
+
+    return true;
+  };
+
+  const checkStateCondition = (condition: StateCondition, gameState: Record<string, number>): boolean => {
+    const value = gameState[condition.key] ?? 0;
+    switch (condition.operator) {
+      case '=':
+        return value === condition.value;
+      case '>':
+        return value > condition.value;
+      case '<':
+        return value < condition.value;
+      case '>=':
+        return value >= condition.value;
+      case '<=':
+        return value <= condition.value;
+      default:
+        return false;
+    }
+  };
+
+  const getChoiceTooltip = (choice: DialogueChoice, gameFlags: Set<string>): string => {
+    if (!choice.prerequisites) return '';
+    const { requiredFlags, blockedFlags, stateConditions } = choice.prerequisites;
+    const reasons: string[] = [];
+
+    if (requiredFlags?.some((flag) => !gameFlags.has(flag))) {
+      reasons.push(`Required flags: ${requiredFlags.join(', ')}`);
+    }
+
+    if (blockedFlags?.some((flag) => gameFlags.has(flag))) {
+      reasons.push(`Blocked by flags: ${blockedFlags.join(', ')}`);
+    }
+
+    if (stateConditions?.length) {
+      reasons.push(`State conditions not met`);
+    }
+
+    return reasons.join('\n');
   };
 
   if (!isOpen || !dialogueTree || !currentNode) return null;

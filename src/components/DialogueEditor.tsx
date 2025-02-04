@@ -9,6 +9,7 @@ import { downloadAsGodotResource, downloadDialogueTreeScript } from '../utils/go
 import { CharacterManager } from './CharacterManager';
 
 const STORAGE_KEY = 'dialogue_tree_data';
+const DEFAULT_PORTRAIT = import.meta.env.BASE_URL + 'characters/default/default.webp';
 
 export const DialogueEditor: React.FC = () => {
   const [dialogueTree, setDialogueTree] = useState<DialogueTree | null>(null);
@@ -84,30 +85,53 @@ export const DialogueEditor: React.FC = () => {
     }
   };
 
-  const loadDialogueTree = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleFileLoad = async (file: File) => {
     if (!file) return;
 
     if (window.confirm('Loading a file will discard any unsaved changes. Continue?')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const content = e.target?.result as string;
-          const loadedTree = JSON.parse(content) as DialogueTree;
+      try {
+        const content = await file.text();
+
+        // Determine file type by extension
+        if (file.name.endsWith('.tres')) {
+          console.log('Not yet implemented');
+        } else {
+          // Existing JSON handling
+          const loadedTree = JSON.parse(content);
           setDialogueTree(loadedTree);
-          localStorage.removeItem(STORAGE_KEY); // Clear saved data when loading file
-        } catch (error) {
-          console.error('Error loading dialogue tree:', error);
         }
-      };
-      reader.readAsText(file);
+
+        setSelectedNode(null);
+        localStorage.removeItem(STORAGE_KEY); // Clear saved data when loading file
+      } catch (error) {
+        console.error('Error loading file:', error);
+        // Add error handling UI feedback here
+      }
     }
-    // Reset the input so the same file can be loaded again
-    event.target.value = '';
   };
 
   const handlePictureEdit = () => {
-    if (isEditingPicture && dialogueTree) {
+    if (!dialogueTree) return;
+
+    // Ensure default character exists
+    if (!dialogueTree.characters.default) {
+      setDialogueTree({
+        ...dialogueTree,
+        characters: {
+          ...dialogueTree.characters,
+          default: {
+            name: 'Default',
+            defaultEmotion: 'default',
+            portraits: {
+              default: DEFAULT_PORTRAIT,
+            },
+          },
+        },
+      });
+      return;
+    }
+
+    if (isEditingPicture) {
       setDialogueTree({
         ...dialogueTree,
         characters: {
@@ -123,7 +147,8 @@ export const DialogueEditor: React.FC = () => {
       });
       setIsEditingPicture(false);
     } else {
-      setPictureUrl(dialogueTree?.characters.default.portraits.default || '');
+      // Safe access with optional chaining and fallback
+      setPictureUrl(dialogueTree?.characters?.default?.portraits?.default || DEFAULT_PORTRAIT);
       setIsEditingPicture(true);
     }
   };
@@ -188,14 +213,43 @@ export const DialogueEditor: React.FC = () => {
     });
   };
 
-  const loadSelectedTemplate = () => {
-    if (window.confirm('Loading a template will discard any unsaved changes. Continue?')) {
-      const selectedFile = templates.find((file) => file.path === selectedTemplatePath);
-      if (selectedFile) {
-        const newTree: DialogueTree = JSON.parse(JSON.stringify(selectedFile.content));
-        setDialogueTree(newTree);
-        localStorage.removeItem(STORAGE_KEY); // Clear saved data when loading template
+  const loadSelectedTemplate = async () => {
+    try {
+      const template = templates.find((t) => t.path === selectedTemplatePath);
+      if (template) {
+        const response = await fetch(template.path);
+        const data = await response.json();
+        // Add default character if none exists
+        if (!data.characters) {
+          data.characters = {
+            default: {
+              name: 'Default',
+              defaultEmotion: 'default',
+              portraits: {
+                default: DEFAULT_PORTRAIT,
+              },
+            },
+          };
+        }
+        setDialogueTree(data);
       }
+    } catch (error) {
+      console.error('Error loading template:', error);
+      // Set a minimal valid tree on error
+      setDialogueTree({
+        name: 'New Dialogue',
+        characters: {
+          default: {
+            name: 'Default',
+            defaultEmotion: 'default',
+            portraits: {
+              default: DEFAULT_PORTRAIT,
+            },
+          },
+        },
+        startNodeId: 'start',
+        nodes: {},
+      });
     }
   };
 
@@ -237,7 +291,7 @@ export const DialogueEditor: React.FC = () => {
               />
             ) : (
               <span className='current-picture'>
-                {dialogueTree.characters.default?.portraits.default || 'No picture set'}
+                {dialogueTree?.characters?.default?.portraits?.default || 'No picture set'}
               </span>
             )}
             <button
@@ -256,8 +310,13 @@ export const DialogueEditor: React.FC = () => {
           </button>
           <input
             type='file'
-            accept='.json'
-            onChange={loadDialogueTree}
+            accept='.json,.tres'
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleFileLoad(file);
+              // Reset the input so the same file can be loaded again
+              e.target.value = '';
+            }}
             style={{ display: 'none' }}
             id='load-file'
           />

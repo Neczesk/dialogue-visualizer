@@ -1,7 +1,34 @@
 import { DialogueTree } from '../types/DialogueTypes';
 
 const convertToTRES = (dialogueTree: DialogueTree): string => {
+  // Convert camelCase/PascalCase to snake_case
+  const toSnakeCase = (str: string) => str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`).replace(/^_/, '');
+
   // Helper to convert any object to Godot resource syntax
+  const objectToTRES = (obj: object, indent: string = ''): string => {
+    if (Array.isArray(obj)) {
+      if (obj.length === 0) return '[]';
+      return `[${obj.map((item) => objectToTRES(item, indent)).join(', ')}]`;
+    }
+
+    if (typeof obj === 'object' && obj !== null) {
+      const entries = Object.entries(obj)
+        .filter(([, value]) => value !== undefined)
+        .map(([key, value]) => {
+          const snakeKey = toSnakeCase(key);
+          if (key === 'text') {
+            return `"${snakeKey}": "${value as string}"`;
+          }
+          return `"${snakeKey}": ${objectToTRES(value, indent)}`;
+        });
+
+      if (entries.length === 0) return '{}';
+      return `{${entries.join(', ')}}`;
+    }
+
+    if (typeof obj === 'string') return `"${(obj as string).replace(/"/g, '\\"')}"`;
+    return String(obj);
+  };
 
   return `[gd_resource type="Resource" script_class="DialogueTree" load_steps=2 format=3]
 
@@ -10,69 +37,9 @@ const convertToTRES = (dialogueTree: DialogueTree): string => {
 [resource]
 script = ExtResource("1_script")
 name = "${dialogueTree.name}"
-characters = {
-${Object.entries(dialogueTree.characters)
-  .map(
-    ([id, char]) => `
-"${id}": {
-  "name": "${char.name}",
-  "default_emotion": "${char.defaultEmotion}",
-  "portraits": {
-    ${Object.entries(char.portraits)
-      .map(([emotion, url]) => `"${emotion}": "${url.replace(/^\//, 'res://')}"`)
-      .join(',\n    ')}
-  }
-}`
-  )
-  .join(',\n')}
-}
+characters = ${objectToTRES(dialogueTree.characters)}
 start_node_id = "${dialogueTree.startNodeId}"
-nodes = {
-${Object.entries(dialogueTree.nodes)
-  .map(
-    ([id, node]) => `
-"${id}": {
-  "id": "${node.id}",
-  "character": "${node.character}",
-  "speaker": "${node.speaker}",
-  "text": "${node.text.replace(/"/g, '\\"')}",
-  "emotion": "${node.emotion || 'default'}",
-  ${
-    node.alternateTexts
-      ? `"alternate_texts": [
-    ${node.alternateTexts
-      .map(
-        (alt) => `{
-      "text": "${alt.text.replace(/"/g, '\\"')}",
-      "emotion": "${alt.emotion || 'default'}",
-      ${alt.prerequisites ? `"prerequisites": ${JSON.stringify(alt.prerequisites)}` : ''}
-    }`
-      )
-      .join(',\n    ')}
-  ],`
-      : ''
-  }
-  "choices": [
-    ${node.choices
-      .map(
-        (choice) => `{
-      "id": "${choice.id}",
-      "text": "${choice.text.replace(/"/g, '\\"')}",
-      "next_node_id": "${choice.nextNodeId}",
-      ${choice.prerequisites ? `"prerequisites": ${JSON.stringify(choice.prerequisites)},` : ''}
-      ${
-        choice.alternateDestinations ? `"alternate_destinations": ${JSON.stringify(choice.alternateDestinations)},` : ''
-      }
-      ${choice.flagChanges ? `"flag_changes": ${JSON.stringify(choice.flagChanges)},` : ''}
-      ${choice.stateChanges ? `"state_changes": ${JSON.stringify(choice.stateChanges)}` : ''}
-    }`
-      )
-      .join(',\n    ')}
-  ]
-}`
-  )
-  .join(',\n')}
-}`;
+nodes = ${objectToTRES(dialogueTree.nodes)}`;
 };
 
 // Add helper function for system save dialog
