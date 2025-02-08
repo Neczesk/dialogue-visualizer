@@ -35,11 +35,30 @@ interface DialogueFlowProps {
 
 type ConnectedNodes = Set<string>;
 
-const DialogueNodeComponent: React.FC<{
+interface DialogueNodeProps {
   data: DialogueNodeData;
   id: string;
   style?: React.CSSProperties;
-}> = ({ data, id, style }) => {
+  dialogueTree: DialogueTree;
+}
+
+const DialogueNodeComponent: React.FC<DialogueNodeProps> = ({ data, id, style, dialogueTree }) => {
+  const isBroken = (choice: DialogueChoice) =>
+    (!choice.nextNodeId || !dialogueTree.nodes[choice.nextNodeId]) && !choice.exit;
+
+  const getTooltipText = (choice: DialogueChoice) =>
+    choice.exit
+      ? `Exit: ${choice.exit.status}`
+      : isBroken(choice)
+      ? 'Missing target node!'
+      : !!choice.prerequisites?.requiredFlags?.length || !!choice.prerequisites?.stateConditions?.length
+      ? `Required: ${choice.prerequisites?.requiredFlags?.join(', ')}${
+          choice.prerequisites?.blockedFlags ? `\nBlocked by: ${choice.prerequisites.blockedFlags.join(', ')}` : ''
+        }`
+      : choice.prerequisites?.blockedFlags?.length
+      ? `Can be blocked by: ${choice.prerequisites?.blockedFlags?.join(', ')}`
+      : '';
+
   return (
     <div
       className='dialogue-node'
@@ -65,34 +84,19 @@ const DialogueNodeComponent: React.FC<{
           const isLocked =
             !!choice.prerequisites?.requiredFlags?.length || !!choice.prerequisites?.stateConditions?.length;
           const isBlockable = !!choice.prerequisites?.blockedFlags?.length;
-          const isBroken = !choice.nextNodeId && !choice.exit;
-
-          const tooltipText = choice.exit
-            ? `Exit: ${choice.exit.status}`
-            : isBroken
-            ? 'Missing target node!'
-            : isLocked
-            ? `Required: ${choice.prerequisites?.requiredFlags?.join(', ')}${
-                choice.prerequisites?.blockedFlags
-                  ? `\nBlocked by: ${choice.prerequisites.blockedFlags.join(', ')}`
-                  : ''
-              }`
-            : isBlockable
-            ? `Can be blocked by: ${choice.prerequisites?.blockedFlags?.join(', ')}`
-            : '';
 
           return (
             <div
               key={index}
               className={`dialogue-node-choice ${isLocked ? 'locked' : ''} ${isBlockable ? 'blockable' : ''} ${
                 choice.exit ? 'exit' : ''
-              } ${isBroken ? 'broken' : ''}`}
-              title={tooltipText}
+              } ${isBroken(choice) ? 'broken' : ''}`}
+              title={getTooltipText(choice)}
             >
               • {choice.text}
               {isLocked && <span className='lock-icon'>🔒</span>}
               {isBlockable && <span className='block-icon'>⚠️</span>}
-              {isBroken && <span className='broken-icon'>⚡</span>}
+              {isBroken(choice) && <span className='broken-icon'>⚡</span>}
               {choice.exit && <span className='exit-icon'>🚪</span>}
             </div>
           );
@@ -104,30 +108,6 @@ const DialogueNodeComponent: React.FC<{
       />
     </div>
   );
-};
-
-const nodeTypes = {
-  dialogueNode: DialogueNodeComponent,
-};
-
-const calculateNodeHeight = (node: DialogueNode): number => {
-  const BASE_HEIGHT = 80; // Base height for padding and speaker
-  const TEXT_LINE_HEIGHT = 20;
-  const CHOICE_HEIGHT = 30;
-  const CHOICES_PADDING = 20;
-
-  // Calculate text height (rough estimate based on character count and width)
-  const CHARS_PER_LINE = 35; // Approximate characters per line
-  const textLines = Math.ceil(node.text.length / CHARS_PER_LINE);
-  const textHeight = textLines * TEXT_LINE_HEIGHT;
-
-  // Calculate choices height
-  const choicesHeight = node.choices.length * CHOICE_HEIGHT;
-
-  // Only add choices padding if there are choices
-  const totalChoicesHeight = node.choices.length > 0 ? choicesHeight + CHOICES_PADDING : 0;
-
-  return BASE_HEIGHT + textHeight + totalChoicesHeight;
 };
 
 export const DialogueFlow: React.FC<DialogueFlowProps> = ({ dialogueTree, onCreateNode, onUpdate }) => {
@@ -607,7 +587,39 @@ export const DialogueFlow: React.FC<DialogueFlowProps> = ({ dialogueTree, onCrea
     setTimeout(() => {
       fitView({ padding: 0.2 });
     }, 100);
-  }, [dialogueTree, nodes]);
+  }, [dialogueTree, fitView]);
+
+  const nodeTypes = useMemo(
+    () => ({
+      dialogueNode: (props: any) => (
+        <DialogueNodeComponent
+          {...props}
+          dialogueTree={dialogueTree}
+        />
+      ),
+    }),
+    [dialogueTree]
+  );
+
+  const calculateNodeHeight = (node: DialogueNode): number => {
+    const BASE_HEIGHT = 80; // Base height for padding and speaker
+    const TEXT_LINE_HEIGHT = 20;
+    const CHOICE_HEIGHT = 30;
+    const CHOICES_PADDING = 20;
+
+    // Calculate text height (rough estimate based on character count and width)
+    const CHARS_PER_LINE = 35; // Approximate characters per line
+    const textLines = Math.ceil(node.text.length / CHARS_PER_LINE);
+    const textHeight = textLines * TEXT_LINE_HEIGHT;
+
+    // Calculate choices height
+    const choicesHeight = node.choices.length * CHOICE_HEIGHT;
+
+    // Only add choices padding if there are choices
+    const totalChoicesHeight = node.choices.length > 0 ? choicesHeight + CHOICES_PADDING : 0;
+
+    return BASE_HEIGHT + textHeight + totalChoicesHeight;
+  };
 
   return (
     <>
